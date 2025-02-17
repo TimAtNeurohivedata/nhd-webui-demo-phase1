@@ -1,0 +1,16 @@
+body {
+    margin: 0; /* Remove default body margins */
+    height: 100vh; /* Set body height to full viewport height */
+    background: linear-gradient(90deg, #0d334b 19px, transparent 1%) center, linear-gradient(#0d334b 19px, transparent 1%) center, #11345d;
+    background-size: 20px 20px;
+    color: white;
+    font-family: Helvetica
+}
+
+h1 {
+    font-size: calc(16px + 2vw);
+}
+
+a {
+    color: white;
+}
