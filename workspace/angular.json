@@ -219,6 +219,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "baseHref": "/workspace/dist/demo-app/ngcore01-root-viewport/",
             "outputPath": "dist/ngcore01-root-viewport",
             "index": "demo-app/ngcore01-root-viewport/src/index.html",
             "browser": "demo-app/ngcore01-root-viewport/src/main.ts",
@@ -333,6 +334,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "baseHref": "/workspace/dist/demo-app/ngcore02-flex-splitter/",
             "outputPath": "dist/ngcore02-flex-splitter",
             "index": "demo-app/ngcore02-flex-splitter/src/index.html",
             "browser": "demo-app/ngcore02-flex-splitter/src/main.ts",
@@ -480,6 +482,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "baseHref": "/workspace/dist/demo-app/ngcommon01-mat-theme-input/",
             "outputPath": "dist/ngcommon01-mat-theme-input",
             "index": "demo-app/ngcommon01-mat-theme-input/src/index.html",
             "browser": "demo-app/ngcommon01-mat-theme-input/src/main.ts",
