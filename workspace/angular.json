@@ -150,6 +150,153 @@
           }
         }
       }
+    },
+    "ngcore": {
+      "projectType": "library",
+      "root": "shared/ngcore",
+      "sourceRoot": "shared/ngcore/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "shared/ngcore/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "shared/ngcore/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "shared/ngcore/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "shared/ngcore/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "ngcore01-root-viewport": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:class": {
+          "skipTests": true
+        },
+        "@schematics/angular:component": {
+          "skipTests": true
+        },
+        "@schematics/angular:directive": {
+          "skipTests": true
+        },
+        "@schematics/angular:guard": {
+          "skipTests": true
+        },
+        "@schematics/angular:interceptor": {
+          "skipTests": true
+        },
+        "@schematics/angular:pipe": {
+          "skipTests": true
+        },
+        "@schematics/angular:resolver": {
+          "skipTests": true
+        },
+        "@schematics/angular:service": {
+          "skipTests": true
+        }
+      },
+      "root": "demo-app/ngcore01-root-viewport",
+      "sourceRoot": "demo-app/ngcore01-root-viewport/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/ngcore01-root-viewport",
+            "index": "demo-app/ngcore01-root-viewport/src/index.html",
+            "browser": "demo-app/ngcore01-root-viewport/src/main.ts",
+            "polyfills": [
+              "zone.js"
+            ],
+            "tsConfig": "demo-app/ngcore01-root-viewport/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "demo-app/ngcore01-root-viewport/public"
+              }
+            ],
+            "styles": [
+              "demo-app/ngcore01-root-viewport/src/styles.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "ngcore01-root-viewport:build:production"
+            },
+            "development": {
+              "buildTarget": "ngcore01-root-viewport:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "tsConfig": "demo-app/ngcore01-root-viewport/tsconfig.spec.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "demo-app/ngcore01-root-viewport/public"
+              }
+            ],
+            "styles": [
+              "demo-app/ngcore01-root-viewport/src/styles.css"
+            ],
+            "scripts": []
+          }
+        }
+      }
     }
   }
 }

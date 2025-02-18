@@ -1,0 +1,12 @@
+/* root-viewport */
+
+#root-viewport {
+  /* size/position of this element */
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+
+  /* color/borders of this element */
+  background: black;
+  border: var(--ngdemo-root-viewport-border);
+}

@@ -6,6 +6,9 @@
     "paths": {
       "assets": [
         "./dist/assets"
+      ],
+      "ngcore": [
+        "./dist/ngcore"
       ]
     },
     "outDir": "./dist/out-tsc",
