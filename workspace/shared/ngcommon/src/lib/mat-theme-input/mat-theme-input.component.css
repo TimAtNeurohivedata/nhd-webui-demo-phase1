@@ -1,0 +1,19 @@
+.theme-example-icon {
+  margin-right: 0;
+  margin-left: 24px;
+  order: 1;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: solid 1px color-mix(in srgb, var(--mat-sys-outline-variant) 50%, transparent);
+}
+
+::ng-deep .theme-mat-option .mdc-list-item__primary-text {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+::ng-deep .mat-pseudo-checkbox {
+  display: none !important;
+}
