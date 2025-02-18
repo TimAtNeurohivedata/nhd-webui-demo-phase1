@@ -1,0 +1,92 @@
+/*
+ * This example shows how CSS attributes should be ordered, grouped, and commented
+ * This example serves as a style guideline exmaple for OasisWorks CSS files
+ */
+
+/*
+ * Order of sections within CSS should always be the same
+ *
+ * 1) properties that control layout of child elements
+ *    display attributes
+ *    flexbox attributes
+ *
+ * 2) properties that control size/position of current element
+ *    position
+ *    flex attribute
+ *    size (height/width)
+ *    transform attributes
+ *
+ * 3) properties that control spacing between and around the current element
+ *    margin attributes
+ *    padding attributes
+ *
+ * 4) properties that control colors of current element
+ *    color attribute
+ *    background attributes
+ *    border attributes
+ *
+ * 5) properties that control text/font of current element and any children
+ *    font attributes
+ *    content
+ *    user-select
+ *
+ * 6) properties that control animation fo current element
+ *    transition
+ *    any attributes associated with the transition that could be under a different section
+ *    i.e. for example if width animates put width here so it is clear it is under animation
+ *
+ * 7) properties that control overlay effects
+ *    pointer-events
+ *    z-index
+ *
+ * 8) properties that control accessibility
+ *    cursor
+ */
+
+#example-div {
+  /* layout of child elements */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  /* size/position of this element */
+  position: relative;
+  flex: 0 0 auto;
+  height: 100%;
+  width: 100%;
+  transform-origin: 0% 0;
+  transform: skewY(-20deg);
+
+  /* spacing within/around this component */
+  margin-left: auto;
+  padding-top: 1vh;
+
+  /* color/borders of this element */
+  color: white;
+  background-color: var(--background-color-clear3);
+  border-color: var(--primary-panel-border-color);
+  border-width: var(--viewport-border-width);
+  border-style: solid;
+  opacity: 1.0;
+
+  /* text/font properties of this element and children */
+  font: var(--oframe-header-title-font-normal);
+  font-size: 1.5vw;
+  font-size: var(--oasis-font-size-large);
+  font-weight: 300;
+  text-align: left;
+  text-transform: initial;
+  content: '';
+  user-select: none;
+
+  /* animation properties of this element */
+  transition: width 0.5s;
+
+  /* Overlay effects */
+  pointer-events: all;
+  z-index: 1;
+
+  /* accessibility properties of this element */
+  cursor: pointer;
+}

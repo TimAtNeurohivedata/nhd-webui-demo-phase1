@@ -1,0 +1,106 @@
+/* Global CSS variables to use across all stylesheets */
+
+@use 'themes/prebuilt-themes-static.scss' as *;
+@import url("opensans-webkit/src/css/open-sans.css");
+
+* {
+  /* Proportional fonts that are scaled to the vw unit */
+  --oasis-font-size-xxx-large: calc(100vw * 32 / 1920); /* 32px */
+  --oasis-font-size-xx-large: calc(100vw * 28 / 1920); /* 28px */
+  --oasis-font-size-x-large: calc(100vw * 24 / 1920); /* 24px */
+  --oasis-font-size-large: calc(100vw * 20 / 1920); /* 20px */
+  --oasis-font-size-medium: calc(100vw * 15 / 1920); /* 15px */
+  --oasis-font-size-standard: calc(100vw * 13 / 1920); /* 13px */
+  --oasis-font-size-small: calc(100vw * 10 / 1920); /* 10px */
+  --oasis-font-size-x-small: calc(100vw * 7 / 1920); /* 7px */
+  --oasis-font-size-xx-small: 6px;
+
+  --oasis-font-weight-light: 300;
+  --oasis-font-weight-normal: 400;
+  --oasis-font-weight-bold: 700;
+
+  --oasis-font-normal: 
+  var(--oasis-font-weight-normal) var(--oasis-font-size-standard) 'Open Sans';
+  --oasis-font-bold:
+  var(--oasis-font-weight-bold) var(--oasis-font-size-standard) 'Open Sans';
+
+  /* The primary color, thiw will be rethemed */
+  --primary-color-template: 0, 118, 192;
+
+  /* Primary Color Variations */
+  --primary-color-trans: rgba(var(--primary-color-template), 0.8);
+  --primary-color-box-shadow-active:
+  0 0 10px 5px rgba(var(--primary-color-template), .4);
+  --primary-color-box-shadow-inactive:
+  0 0 5px 2px rgba(var(--primary-color-template), .4);
+  --primary-color-text-shadow-active:
+  0 0 30px rgba(var(--primary-color-template), .4);
+
+  /* Various background colors */
+  --oasis-gc-background-color-grey-blue: rgba(20, 27, 31, 100);
+  
+  /* Colors to use for ngdemo components */
+  --ngdemo-root-viewport-border: red solid 1px;
+  --ngdemo-screen-border: blue solid 1px;
+  --ngdemo-panel-border: purple solid 1px;
+  --ngdemo-panel-background-color: black;
+  --ngdemo-panel-text-color: white;
+  --ngdemo-widget-font-bold:
+  var(--oasis-font-weight-bold) var(--oasis-font-size-standard) 'Open Sans';
+  --ngdemo-widget-border: var(--primary-color-trans) solid 1px;
+
+  --ngdemo-label-color: white;
+
+  --ngdemo-button-text-color: white;
+  --ngdemo-button-text-color-active: black;
+  --ngdemo-button-background-color: #3F4E56;
+  --ngdemo-button-active-background-color: var(--primary-color-trans);
+  --ngdemo-button-background-color-active: var(--primary-color-trans);
+  --ngdemo-button-border: var(--ngdemo-widget-border);
+  --ngdemo-button-box-shadow-active: var(--primary-color-box-shadow-active);
+  --ngdemo-button-text-shadow-active: var(--primary-color-text-shadow-active);
+  --ngdemo-button-font: var(--ngdemo-widget-font-bold);
+
+  --ngdemo-input-color: black;
+  --ngdemo-input-color-readonly: white;
+  --ngdemo-input-background-color: white;
+  --ngdemo-input-background-color-readonly: #3F4E56;
+  --ngdemo-button-border: var(--ngdemo-widget-border);
+
+  /* Colors to use for ngpanel components */
+  --ngpanel-panel-background:
+  linear-gradient(-90deg, rgba(20, 27, 31, 0.95) 0%, rgba(20, 27, 31, 0.8) 100%);
+
+  --ngpanel-table-footer-background-color: rgba(133, 183, 210, 0.2);
+  --ngpanel-table-header-background-color: rgba(255, 255, 255, 0.10);
+  --ngpanel-table-header-color: white;
+  --ngpanel-table-header-font: var(--oasis-font-bold);
+  --ngpanel-table-header-column-border: rgba(133, 183, 210, 1.0) solid 1px;
+  --ngpanel-table-pagination-index-color: rgb(131, 153, 170);
+  --ngpanel-table-row-color: white;
+  --ngpanel-table-row-font: var(--oasis-font-normal);
+}
+
+
+/* Default CSS Properties to apply globally */
+
+* {
+  /* Default spacing within/around */
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+
+  /* Default font */
+  font-family: 'Open Sans';
+  font-weight: var(--oasis-font-weight-normal);
+}
+
+/* Apply this class to center text within a div */
+
+.nhd-panel-center-text {
+  /* layout of child elements */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+}

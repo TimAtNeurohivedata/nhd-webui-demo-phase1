@@ -1,0 +1,46 @@
+/* prebuilt-themes-static.scss */
+
+// Include more custom prebuilt themes
+
+@use './search-ai-dark-theme.scss' as *;
+
+// Define a set of prebuilt themes into static CSS classes
+
+@use '@angular/material' as mat;
+@include mat.core();
+
+$azure-blue-theme-properties: (color: (theme-type: light, primary: mat.$azure-palette, tertiary: mat.$blue-palette));
+$cyan-orange-theme-properties: (color: (theme-type: dark, primary: mat.$cyan-palette, tertiary: mat.$orange-palette));
+$magenta-violet-theme-properties: (color: (theme-type: dark, primary: mat.$magenta-palette, tertiary: mat.$violet-palette));
+$rose-red-theme-properties: (color: (theme-type: light, primary: mat.$rose-palette, tertiary: mat.$red-palette));
+
+body {
+  &.azure-blue-theme {
+    @include mat.theme($azure-blue-theme-properties);
+  }
+  &.cyan-orange-theme {
+    @include mat.theme($cyan-orange-theme-properties);
+  }
+  &.magenta-violet-theme {
+    @include mat.theme($magenta-violet-theme-properties);
+  }
+  &.rose-red-theme {
+    @include mat.theme($rose-red-theme-properties);
+  }
+}
+
+// Create mat-app-background class that uses the current theme variables
+
+@include mat.elevation-classes();
+@include mat.app-background();
+
+:root {
+  @include mat.elevation-classes();
+  @include mat.app-background();
+}
+
+// Set the default theme of the body element
+
+body {
+  @include mat.theme($cyan-orange-theme-properties);
+}

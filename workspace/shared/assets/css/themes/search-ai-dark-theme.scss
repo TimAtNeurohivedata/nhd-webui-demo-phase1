@@ -1,0 +1,137 @@
+/* search-ai-dark-theme.scss */
+
+@use '@angular/material' as mat;
+@include mat.core();
+
+// Cyan color palette modified for search-ai-primary-palette
+
+$search-ai-primary-palette: (
+  0:  #000000,
+  10: #002020,
+  20: rgb(238, 240, 255), // --mat-sys-on-primary
+  25: #004343,
+  30: #004f4f,
+  35: #005c5c,
+  40: #006a6a,
+  50: #008585,
+  60: #00a1a1,
+  70: #00bebe,
+  80: rgb(31, 45, 65), // --mat-sys-primary
+  90: #00fbfb,
+  95: #adfffe,
+  98: #e2fffe,
+  99: #f1fffe,
+  100: #ffffff,
+  secondary: (
+    0:  #000000,
+    10: #051f1f,
+    20: #1b3534,
+    25: #27403f,
+    30: #324b4b,
+    35: #3e5757,
+    40: #4a6363,
+    50: #627c7b,
+    60: #7b9695,
+    70: #95b0b0,
+    80: #b0cccb,
+    90: #cce8e7,
+    95: #daf6f5,
+    98: #e3fffe,
+    99: #f1fffe,
+    100: #ffffff,
+  ),
+  neutral: (
+    0:  #000000,
+    10: #191c1c,
+    20: #2d3131,
+    25: #383c3c,
+    30: #444747,
+    35: #4f5353,
+    40: #5b5f5f,
+    50: #747877,
+    60: #8e9191,
+    70: #a9acab,
+    80: #c4c7c6,
+    90: rgb(238, 240, 255), // --mat-select-enabled-trigger-text-color --mat-option-label-text-color
+    95: #eff1f0,
+    98: #f7faf9,
+    99: #fafdfc,
+    100: #ffffff,
+    4:  #0b0f0e,
+    6:  #101218, // --mat-app-background-colora
+    12: rgb(16, 18, 24), // --mat-select-panel-background-color
+    17: #272b2a,
+    22: #313635,
+    24: #363a39,
+    87: #d7dbd9,
+    92: #e6e9e7,
+    94: #ebefed,
+    96: #f1f4f3,
+  ),
+  neutral-variant: (
+    0:  #000000,
+    10: #141d1d,
+    20: #293232,
+    25: #343d3d,
+    30: #000000, // --mdc-filled-text-field-container-color
+    35: #4a5454,
+    40: #566060,
+    50: #6f7979,
+    60: #889392,
+    70: #a3adad,
+    80: #bec9c8,
+    90: #dae5e4,
+    95: #e9f3f2,
+    98: #f1fbfa,
+    99: #f4fefd,
+    100: #ffffff,
+  ),
+  error: (
+      0:  #000000,
+      10: #410002,
+      20: #690005,
+      25: #7e0007,
+      30: #93000a,
+      35: #a80710,
+      40: #ba1a1a,
+      50: #de3730,
+      60: #ff5449,
+      70: #ff897d,
+      80: #ffb4ab,
+      90: #ffdad6,
+      95: #ffedea,
+      98: #fff8f7,
+      99: #fffbff,
+      100: #ffffff,
+  ),
+);
+
+$search-ai-dark-theme-properties: (color: (theme-type: dark, primary: $search-ai-primary-palette, tertiary: mat.$blue-palette));
+
+body {
+  &.search-ai-dark-theme {
+    @include mat.theme($search-ai-dark-theme-properties);
+
+    & { --mdc-outlined-button-label-text-color: rgb(168, 199, 250) !important; }
+
+    .mat-mdc-select[aria-expanded="true"] {
+      color: rgb(36, 40, 50) !important;
+    }
+
+    .mdc-text-field--focused {
+      background-color: rgba(168, 199, 250, 0.82) !important;
+    }
+
+    .mat-mdc-text-field-wrapper {
+      border : 1px solid rgb(69, 95, 135) !important;
+    }
+
+    .mat-mdc-text-field-wrapper:hover {
+      background-color: rgb(31, 45, 65) !important;
+    }
+
+    .mat-mdc-option:hover {
+      background-color: rgb(31, 45, 65) !important;
+    }
+  }
+}
