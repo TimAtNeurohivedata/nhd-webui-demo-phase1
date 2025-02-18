@@ -1,0 +1,57 @@
+<h1>Basic Panel Component</h1>
+<div class="demo-group">
+  <div class="demo-color-container">
+    <div class="demo-heading" style="background-color: var(--mat-sys-primary); color: var(--mat-sys-on-primary)">
+      <div class="demo-name">Primary</div>
+      <div class="demo-variable demo-code">--mat-sys-primary</div>
+    </div>
+    <div class="demo-description">
+      <p>
+        The most common color used by Angular Material components to
+        participate in the application theme.
+      </p>
+      <p>
+        Examples include the background color
+        of filled buttons, the icon color of selected radio buttons, and the
+        outline color of form fields.
+      </p>
+      <p>
+        Use the color <span class="demo-surface-variable">--mat-sys-on-primary</span> for
+        icons, text, and other visual elements placed on a primary background. This
+        color is calculated to be optimal for accessibility and legibility.
+      </p>
+    </div>
+  </div>
+
+  <div class="demo-color-container">
+    <div class="demo-heading"
+         style="background-color: var(--mat-sys-surface);
+                color: var(--mat-sys-on-surface)">
+      <div class="demo-name">Surface</div>
+      <div class="demo-variable code">--mat-sys-surface</div>
+    </div>
+    <div class="demo-description">
+      <p>
+        A low-emphasis background color that provides a clear contrast for
+        both light and dark themes and their varied theme colors.
+      </p>
+      <p>
+        Examples include the background color of the application and most
+        components such as the dialog, card, table, and more.
+      </p>
+      <p>
+        Use the color <span class="demo-surface-variable">--mat-sys-on-surface</span> for
+        icons, text, and other visual elements placed on a surface background. This
+        color is calculated to be optimal for accessibility and legibility.
+      </p>
+    </div>
+  </div>
+</div>
+
+<h1>Button Components</h1>
+<div style="width: 100%; display: flex; justify-content: space-around;">
+  <button mat-button>Basic Button</button>
+  <button mat-raised-button color="primary">Raised Button</button>
+  <button mat-stroked-button color="accent">Stroked Button</button>
+  <button mat-flat-button color="warn">Flat Button</button>
+</div>

@@ -1,14 +1,15 @@
 <div class="mat-app-background" style="height: 100%;">
   <nhd-ngcore-flex-splitter-horizontal>
-    <div class="nhd-panel-center-text" style="flex: 1 1 auto;">
-      <h1>MAIN VIEWPORT</h1>
+    <div class="nhd-panel-center-text" style="flex: 1 1 auto; height: 100%;">
+      <app-element-panel>
+      </app-element-panel>
     </div>
 
     <nhd-ngcore-flex-splitter-seperator [paneDirection]="'right'" [paneOpen]="false">
     </nhd-ngcore-flex-splitter-seperator>
 
-    <div class="nhd-panel-center-text" style="flex: 1 1 auto;">
-      <nhd-ngcommon-mat-theme-input>
+    <div class="nhd-panel-center-text" style="flex: 1 0 auto;">
+      <nhd-ngcommon-mat-theme-input style="padding: 2vw;">
       </nhd-ngcommon-mat-theme-input>
     </div>
   </nhd-ngcore-flex-splitter-horizontal>
