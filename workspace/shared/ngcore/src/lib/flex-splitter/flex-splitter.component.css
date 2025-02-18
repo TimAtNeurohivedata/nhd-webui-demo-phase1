@@ -1,0 +1,58 @@
+#flex-splitter-container {
+  height: 100%;
+  width: 100%;
+}
+
+::ng-deep [data-flex-splitter-horizontal],
+::ng-deep [data-flex-splitter-vertical] {
+  display: flex;
+  height: 100%;
+}
+
+::ng-deep [data-flex-splitter-horizontal] > *,
+::ng-deep [data-flex-splitter-vertical] > * {
+  flex: none;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+::ng-deep [data-flex-splitter-horizontal] > [role=separator] {
+  touch-action: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  background-color: rgba(160,160,160,0.15);
+}
+
+::ng-deep [data-flex-splitter-horizontal] > [role=separator] {
+  cursor: ew-resize;
+  width: 24px;
+}
+
+#separator-toggle-left {
+  height: 2vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(170,170,170,0.15);
+  color: #777777;
+  font-size: var(--oasis-font-size-small);
+  width: 100%;
+}
+
+#separator-toggle-left:hover {
+  cursor: pointer;
+  color: white;
+}
+
+.separator-toggle-lines {
+  content: '';
+  box-sizing: border-box;
+  border: 1.25px rgba(160,160,160,0.8);
+
+  width: 4px;
+  height: 24px;
+  border-style: none solid;
+}
