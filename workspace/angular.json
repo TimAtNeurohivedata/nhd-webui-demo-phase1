@@ -561,6 +561,153 @@
           }
         }
       }
+    },
+    "ngscreen": {
+      "projectType": "library",
+      "root": "shared/ngscreen",
+      "sourceRoot": "shared/ngscreen/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "shared/ngscreen/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "shared/ngscreen/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "shared/ngscreen/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "shared/ngscreen/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "ngscreen01-eeg-a": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:class": {
+          "skipTests": true
+        },
+        "@schematics/angular:component": {
+          "skipTests": true
+        },
+        "@schematics/angular:directive": {
+          "skipTests": true
+        },
+        "@schematics/angular:guard": {
+          "skipTests": true
+        },
+        "@schematics/angular:interceptor": {
+          "skipTests": true
+        },
+        "@schematics/angular:pipe": {
+          "skipTests": true
+        },
+        "@schematics/angular:resolver": {
+          "skipTests": true
+        },
+        "@schematics/angular:service": {
+          "skipTests": true
+        }
+      },
+      "root": "demo-app/ngscreen01-eeg-a",
+      "sourceRoot": "demo-app/ngscreen01-eeg-a/src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:application",
+          "options": {
+            "outputPath": "dist/ngscreen01-eeg-a",
+            "index": "demo-app/ngscreen01-eeg-a/src/index.html",
+            "browser": "demo-app/ngscreen01-eeg-a/src/main.ts",
+            "polyfills": [
+              "zone.js"
+            ],
+            "tsConfig": "demo-app/ngscreen01-eeg-a/tsconfig.app.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "demo-app/ngscreen01-eeg-a/public"
+              }
+            ],
+            "styles": [
+              "demo-app/ngscreen01-eeg-a/src/styles.css"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "ngscreen01-eeg-a:build:production"
+            },
+            "development": {
+              "buildTarget": "ngscreen01-eeg-a:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular-devkit/build-angular:extract-i18n"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ],
+            "tsConfig": "demo-app/ngscreen01-eeg-a/tsconfig.spec.json",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "demo-app/ngscreen01-eeg-a/public"
+              }
+            ],
+            "styles": [
+              "demo-app/ngscreen01-eeg-a/src/styles.css"
+            ],
+            "scripts": []
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,80 @@
+<div id="wireframe-settings-column">
+  <fieldset>
+    <legend>Wireframe</legend>
+
+    <div>
+      <label for="wireframe-level1-select-input">
+	RootViewport Wireframes
+      </label>
+      <select #wireframeLevelRvSelectInput
+	      id="wireframe-levelrv-select-input"
+	      class="action-center-select"
+	      (change)=
+	      "this._wireframeLevelRvSelectInputEvent($event)">
+	<option *ngFor="let option of enableSelectOptions"
+		[value]="option.value"> {{option.display}}
+	</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="wireframe-level1-select-input">
+	Enable Level 1 Wireframes
+      </label>
+      <select #wireframeLevel1SelectInput
+	      id="wireframe-level1-select-input"
+	      class="action-center-select"
+	      (change)=
+	      "this._wireframeLevel1SelectInputEvent($event)">
+	<option *ngFor="let option of enableSelectOptions"
+		[value]="option.value"> {{option.display}}
+	</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="wireframe-level2-select-input">
+	Enable Level 2 Wireframes
+      </label>
+      <select #wireframeLevel2SelectInput
+	      id="wireframe-level2-select-input"
+	      class="action-center-select"
+	      (change)=
+	      "this._wireframeLevel2SelectInputEvent($event)">
+	<option *ngFor="let option of enableSelectOptions"
+		[value]="option.value"> {{option.display}}
+	</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="wireframe-level3-select-input">
+	Enable Level 3 Wireframes
+      </label>
+      <select #wireframeLevel3SelectInput
+	      id="wireframe-level3-select-input"
+	      class="action-center-select"
+	      (change)=
+	      "this._wireframeLevel3SelectInputEvent($event)">
+	<option *ngFor="let option of enableSelectOptions"
+		[value]="option.value"> {{option.display}}
+	</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="wireframe-level4-select-input">
+	Enable Level 4 Wireframes
+      </label>
+      <select #wireframeLevel4SelectInput
+	      id="wireframe-level4-select-input"
+	      class="action-center-select"
+	      (change)=
+	      "this._wireframeLevel4SelectInputEvent($event)">
+	<option *ngFor="let option of enableSelectOptions"
+		[value]="option.value"> {{option.display}}
+	</option>
+      </select>
+    </div>
+  </fieldset>
+</div> <!-- div id="wireframe-settings-column" -->

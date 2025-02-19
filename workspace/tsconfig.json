@@ -12,6 +12,9 @@
       ],
       "ngcore": [
         "./dist/ngcore"
+      ],
+      "ngscreen": [
+        "./dist/ngscreen"
       ]
     },
     "outDir": "./dist/out-tsc",
