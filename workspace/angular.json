@@ -630,6 +630,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "baseHref": "/workspace/dist/ngscreen01-eeg-a/browser/",
             "outputPath": "dist/ngscreen01-eeg-a",
             "index": "demo-app/ngscreen01-eeg-a/src/index.html",
             "browser": "demo-app/ngscreen01-eeg-a/src/main.ts",
