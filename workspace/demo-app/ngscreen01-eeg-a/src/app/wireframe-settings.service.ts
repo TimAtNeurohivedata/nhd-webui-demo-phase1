@@ -59,6 +59,14 @@ export class OasisWireframeSettingsService {
     _updateWireframeStyles(): void {
 	let rootElement = document.documentElement;
 
+	if (this._wireframeSettings.enableLevelRv) {
+	    console.log("enable oasis-wireframerv class");
+	    rootElement.classList.add('oasis-wireframerv');
+	}
+	else {
+	    console.log("disable oasis-wireframerv class");
+	    rootElement.classList.remove('oasis-wireframerv');
+	}
 	if (this._wireframeSettings.enableLevel1) {
 	    console.log("enable oasis-wireframe1 class");
 	    rootElement.classList.add('oasis-wireframe1');
