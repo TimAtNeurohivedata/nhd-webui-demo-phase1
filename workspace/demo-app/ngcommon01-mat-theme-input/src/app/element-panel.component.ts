@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
-import { NgcoreModule } from '../../../../shared/ngcore/src/lib/ngcore.module';
+import { NgcoreModule } from 'ngcore';
 import { NgcommonModule } from '../../../../shared/ngcommon/src/lib/ngcommon.module';
 
 @Component({

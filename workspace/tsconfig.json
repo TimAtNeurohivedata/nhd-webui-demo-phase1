@@ -8,10 +8,10 @@
         "./dist/assets"
       ],
       "ngcommon": [
-        "./dist/ngcommon"
+        "./dist/ngcommon", "./shared/ngcommon/src/public-api"
       ],
       "ngcore": [
-        "./dist/ngcore"
+        "./dist/ngcore", "./shared/ngcore/src/public-api"
       ],
       "ngscreen": [
         "./dist/ngscreen"

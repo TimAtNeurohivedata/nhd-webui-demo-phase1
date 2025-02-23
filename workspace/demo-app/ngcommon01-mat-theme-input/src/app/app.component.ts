@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { NgcoreModule } from '../../../../shared/ngcore/src/lib/ngcore.module';
+import { NgcoreModule } from 'ngcore';
 import { AppScreenComponent } from './screen.component';
 
 @Component({
