@@ -1,3 +1,4 @@
+import { Subject } from 'rxjs';
 import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 
 export type SettingsMatThemeType = { name: string, displayName: string, color: string, backgroundColor: string };
@@ -8,6 +9,13 @@ type SysVariable = { name: string; value: string; selectorText: string; }
 })
 
 export class SettingsMatThemeService {
+    private _currentThemeName: string = 'cyan-orange'; // Default theme
+    private _currentThemeClass: string = 'body' + '.' + this._currentThemeName + '-theme';
+    private _reader = new CssVariablesReader();
+    private _renderer!: Renderer2;
+    private _themeUpdatedSubject = new Subject<void>();
+
+    public themeUpdated$ = this._themeUpdatedSubject.asObservable();
     public themeList: SettingsMatThemeType[] = [
 	{ name: 'azure-blue', displayName: 'azure-blue', color: '#d7e3ff', backgroundColor: '#fdfbff' },
 	{ name: 'cyan-orange', displayName: 'cyan-orange', color: '#004f4f', backgroundColor: '#191c1c' },
@@ -17,10 +25,6 @@ export class SettingsMatThemeService {
 	{ name: 'search-ai-dark', displayName: 'search-ai-dark', color: 'rgb(31, 45, 65)', backgroundColor: '#101218' },
     ];
     
-    private _currentThemeName: string = 'cyan-orange'; // Default theme
-    private _reader = new CssVariablesReader();
-    private _renderer!: Renderer2;
-
     constructor(private _rendererFactory: RendererFactory2) {
 	this._renderer = this._rendererFactory.createRenderer(null, null);
 	this.setThemeName(this._currentThemeName);
@@ -31,9 +35,8 @@ export class SettingsMatThemeService {
     }
 
     getSysVariables(): SysVariable[] {
-	console.log("MatThemeService getSysVariables()");
-	this._reader.getAllCssVariables1(["body"], ["--mat-sys"], true);
-	this._reader.printAllCssVariables(["--mat-sys"]);
+	this._reader.getAllCssVariables1([this._currentThemeClass], ["--map-app", "--mat-sys"], true);
+	// this._reader.printAllCssVariables(["--mat-sys-background"]);
 	return this._reader.sysVariables;
     }
 
@@ -46,8 +49,10 @@ export class SettingsMatThemeService {
 	if (body) {
             this._renderer.removeClass(body, this._currentThemeName + '-theme');
             this._renderer.addClass(body, themeName + '-theme');
+	    this._currentThemeName = themeName;
+	    this._currentThemeClass = 'body' + '.' + this._currentThemeName + '-theme';
 	}
-	this._currentThemeName = themeName;
+	this._themeUpdatedSubject.next();
     }
 }
 
@@ -64,7 +69,7 @@ class CssVariablesReader {
 	return cssVariable;
     }
     
-    getAllCssVariables1(selectorTextPatterns: string[], namePatterns: string[], filterColorValues: boolean) {
+    getAllCssVariables1(selectorTextPatterns?: string[], namePatterns?: string[], filterColorValues?: boolean) {
 	// From https://stackoverflow.com/questions/65062831/what-does-getcomputedstyle-return-and-how-to-iterate-over-it	
 	const isSameDomain = (styleSheet: any) => {
 	    if (!styleSheet.href) {
@@ -97,13 +102,13 @@ class CssVariablesReader {
 			    )
 	    this.sysVariables = [];
 	    for (let i = 0 ; i < array.length ; i++) {
-		if (!namePatterns.some(searchString => array[i][0].includes(searchString))) {
+		if (selectorTextPatterns !== undefined && !selectorTextPatterns.some(searchString => array[i][1] === searchString)) {
 		    continue;
 		}
-		if (!selectorTextPatterns.some(searchString => array[i][1] === searchString)) {
+		if (namePatterns !== undefined && !namePatterns.some(searchString => array[i][0].includes(searchString))) {
 		    continue;
 		}
-		if (filterColorValues && !this._valueIsColor(array[i][2])) {
+		if (filterColorValues != undefined && filterColorValues && !this._valueIsColor(array[i][2])) {
 		    continue;
 		}
 		this.sysVariables.push({name: array[i][0], value: array[i][2], selectorText: array[i][1]});

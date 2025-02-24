@@ -21,10 +21,14 @@ export class AppElementPanelComponent {
         // 'sys-typescale': {},
     };
     objectKeys = Object.keys;
+    _subscription: any;
     sysVariables: any = [];
 
     constructor(private service: SettingsMatThemeService) {
 	this.sysVariables = service.getSysVariables();
+	this._subscription = this.service.themeUpdated$.subscribe(() => {
+	    this.sysVariables = service.getSysVariables();
+	});
     }
 
     getStyle(category: string, key: string) {
@@ -41,8 +45,5 @@ export class AppElementPanelComponent {
             return { 'font': this.materialSysValues[category] };
         }
         return {};
-    }
-
-    onButtonClick(event: any) {
     }
 }
