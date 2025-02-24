@@ -16,9 +16,9 @@ import { NgcommonModule } from '../../../../shared/ngcommon/src/lib/ngcommon.mod
 
 export class AppElementPanelComponent {
     isChecked = true;
-    materialSysValues = {
+    materialSysValues: any = {
         'sys-color': {},
-        'sys-typescale': {},
+        // 'sys-typescale': {},
     };
     objectKeys = Object.keys;
     sysVariables: any = [];
