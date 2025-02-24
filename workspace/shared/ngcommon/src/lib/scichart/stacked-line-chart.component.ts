@@ -4,7 +4,19 @@ import { makeIncArray, TSciChart, XyDataSeries } from "scichart";
 import { EAxisAlignment, ECoordinateMode, EHorizontalAnchorPoint, EWrapTo, NativeTextAnnotation }  from "scichart";
 import { FastLineRenderableSeries, LeftAlignedOuterVerticallyStackedAxisLayoutStrategy }  from "scichart";
 import { NumericAxis, NumberRange, SciChartSurface }  from "scichart";
+import { SciChartJsNavyTheme } from 'scichart';
 import { ScichartAngularComponent } from "scichart-angular";
+
+import { SettingsMatThemeService } from 'ngcore';
+
+let scichartThemeSysVariableMap: { [key: string]: [string, string] } = {
+    // "scichart-surface-background": ["--mat-sys-secondary-container", "#888888"],
+    "scichart-surface-background": ["--mat-sys-surface-container", "#888888"],
+    "scichart-surface-text-color": ["--mat-sys-primary", "#888888"],
+    "scichart-surface-axis-color": ["--mat-sys-primary", "#888888"],
+    "scichart-numeric-axis-color": ["--mat-sys-secondary", "#888888"],
+};
+let rootElementString: string | HTMLDivElement;
 
 @Component({
     selector: 'nhd-ngcommon-scichart-stacked-line-chart',
@@ -15,19 +27,79 @@ import { ScichartAngularComponent } from "scichart-angular";
 })
 
 export class StackedLineChartComponent {
-    drawExample = drawExample;
+    private _sysVariables: any = [];
+    private _subscription: any;
+
+    public drawExample = drawExample;
+
+    constructor(private service: SettingsMatThemeService) {
+	this._sysVariables = service.getSysVariables();
+	this.updateScichartThemeSysVariableMap();
+	this._subscription = this.service.themeUpdated$.subscribe(() => {
+	    this._sysVariables = service.getSysVariables();
+	    this.updateScichartThemeSysVariableMap();
+	    drawExample(rootElementString);
+	});
+    }
+
+    updateScichartThemeSysVariableMap() {
+	Object.keys(scichartThemeSysVariableMap).forEach(key => {
+	    let sysVariableName: any = scichartThemeSysVariableMap[key][0];
+	    console.log(`Key: ${key}, Value: ${scichartThemeSysVariableMap[key]}`);
+	    let sysVariableValue: any = this.service.getSysVariableByName(sysVariableName).value;
+	    console.log("name, value: ", sysVariableName, sysVariableValue);
+	    if (sysVariableValue === undefined) { return; }
+	    sysVariableValue = this.convertRgbToHexIfNotHex(sysVariableValue);
+	    scichartThemeSysVariableMap[key][1] = sysVariableValue;
+	});
+    }
+
+
+    convertRgbToHexIfNotHex(color: string): string {
+	if (color.startsWith('#')) {
+	    return color; // Already in hex format, return as is
+	}
+
+	const rgbMatch = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+	if (rgbMatch) {
+	    const r = parseInt(rgbMatch[1], 10);
+	    const g = parseInt(rgbMatch[2], 10);
+	    const b = parseInt(rgbMatch[3], 10);
+
+	    const toHex = (c: number): string => {
+		const hex = c.toString(16);
+		return hex.length === 1 ? '0' + hex : hex;
+	    };
+	    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+	}
+	return 'Invalid color format'; // Return an error message for invalid formats
+    }
 }
 
 export const drawExample = async (rootElement: string | HTMLDivElement) => {
+    rootElementString = rootElement;
+
+    // Lookup all of the theme colors first
+    const axisColor = scichartThemeSysVariableMap["scichart-surface-axis-color"][1];
+    const labelStyle = { fontSize: 8, color: scichartThemeSysVariableMap["scichart-surface-axis-color"][1], }; // type TTextStyle
+    const graphLineColor = scichartThemeSysVariableMap["scichart-numeric-axis-color"][1];
+    const graphBackgroundColor = scichartThemeSysVariableMap["scichart-surface-background"][1];
+
     SciChartSurface.useWasmFromCDN();
     const { sciChartSurface, wasmContext } = await SciChartSurface.create(rootElement, {
-        // theme: appTheme.SciChartJsTheme,
+        theme: new SciChartJsNavyTheme(),
     });
+    sciChartSurface.background = graphBackgroundColor;
 
     sciChartSurface.layoutManager.leftOuterAxesLayoutStrategy =
         new LeftAlignedOuterVerticallyStackedAxisLayoutStrategy();
 
-    sciChartSurface.xAxes.add(new NumericAxis(wasmContext, { axisTitle: "X Axis" }));
+    sciChartSurface.xAxes.add(new NumericAxis(wasmContext, {
+	axisTitle: "Timeline",
+	axisTitleStyle: { fontSize: 16, color: axisColor },
+	labelStyle: labelStyle,
+	axisBorder: { borderTop: 1, color: axisColor },
+    }));
 
     // Add title annotation
     sciChartSurface.annotations.add(
@@ -35,6 +107,7 @@ export const drawExample = async (rootElement: string | HTMLDivElement) => {
             // text: "Vertically Stacked Axis: Custom layout of axis to allow traces to overlap. Useful for ECG charts",
             fontSize: 16,
             // textColor: appTheme.ForegroundColor,
+            textColor: scichartThemeSysVariableMap["scichart-surface-text-color"][1],
             x1: 0.5,
             y1: 0,
             opacity: 0.77,
@@ -48,8 +121,7 @@ export const drawExample = async (rootElement: string | HTMLDivElement) => {
     const seriesCount: number = 20;
     let dataSeriesArray = new StackedLineChartXyDataSeriesArray(wasmContext, seriesCount, 1000);
     dataSeriesArray.updateRange(1000);
-    
-    const labelStyle = { fontSize: 8 }; // type TTextStyle
+
     for (let i = 0; i < seriesCount; i++) {
         const range = 10 / seriesCount;
         const yAxis = new NumericAxis(wasmContext, {
@@ -59,7 +131,7 @@ export const drawExample = async (rootElement: string | HTMLDivElement) => {
             zoomExtentsToInitialRange: true,
             maxAutoTicks: 5,
             drawMinorGridLines: false,
-            axisBorder: { borderTop: 0, borderBottom: 0 },
+	    axisBorder: { borderTop: 0, borderBottom: 1, borderRight: 1, color: axisColor },
             axisTitle: `Y ${i}`,
 	    axisTitleStyle: labelStyle,
 	    labelStyle,
@@ -68,7 +140,7 @@ export const drawExample = async (rootElement: string | HTMLDivElement) => {
 
         const lineSeries = new FastLineRenderableSeries(wasmContext, {
             yAxisId: yAxis.id,
-            stroke: "auto",
+            stroke: graphLineColor,
             strokeThickness: 2,
         });
         lineSeries.dataSeries = dataSeriesArray[i]; // getRandomSinewave(wasmContext, 0, Math.random() * 3, Math.random() * 50, 10000, 10);
