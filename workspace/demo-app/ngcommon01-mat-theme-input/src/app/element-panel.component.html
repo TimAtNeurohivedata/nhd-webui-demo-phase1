@@ -55,3 +55,20 @@
   <button mat-stroked-button color="accent">Stroked Button</button>
   <button mat-flat-button color="warn">Flat Button</button>
 </div>
+
+<h1>Theme Sys Variables</h1>
+<mat-checkbox [(ngModel)]="isChecked" style="margin-bottom: 2vh;">Display Theme Sys Variables</mat-checkbox>
+<div class="theme-group" *ngIf="isChecked">
+  <div class="theme-container" *ngFor="let category of objectKeys(materialSysValues)">
+    <h2>{{ category }}</h2>
+    <div class="theme-variables-container" *ngFor="let item of sysVariables">
+      <div class="theme-variable-column">
+        <span class="theme-variable-key">{{ item.name }}:</span>
+        <span class="theme-variable-value">{{ item.value }}</span>
+        <span class="theme-variable-color" [ngStyle]="getStyle(category, item.name)">
+          {{ item.value }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
