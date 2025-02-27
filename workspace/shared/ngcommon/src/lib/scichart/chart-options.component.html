@@ -1,0 +1,27 @@
+<div style="display: flex; flex-direction: column">
+  <mat-form-field>
+    <mat-label>Data Type</mat-label>
+    <mat-select [ngModel]='this.optionsService.chartOptions.dataGenerator.dataType' (ngModelChange)='this.ngModelChange({ dataGenerator: { dataType: $event } })'>
+      <mat-option value="SineWave">SineWave</mat-option>
+      <mat-option value="RandomData">RandomData</mat-option>
+      <mat-option value="RandomWalk">RandomWalk</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Auto Update Type</mat-label>
+    <mat-select [ngModel]='this.optionsService.chartOptions.dataGenerator.autoUpdateType' (ngModelChange)='this.ngModelChange({ dataGenerator: { autoUpdateType: $event } })'>
+      <mat-option value="Static">Static</mat-option>
+      <mat-option value="Dynamic">Dynamic</mat-option>
+      <mat-option value="Stream">Stream</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-checkbox [ngModel]='this.optionsService.chartOptions.theme.useNativeSciChartTheme' (ngModelChange)='this.ngModelChange({ theme: { useNativeSciChartTheme: $event } })'>
+    Use Native SciChart Theme
+  </mat-checkbox>
+</div>
+
+<!--
+{ dataGenerator: { dataType: ("SineWave" as string) } } as Partial<ChartOptionsType>
+-->
