@@ -2,13 +2,12 @@ import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
 import { NgcoreModule } from '../../../../shared/ngcore/src/lib/ngcore.module';
-import { StackedLineChartComponent } from '../../../../shared/ngcommon/src/public-api';
+import { AppScreenComponent } from './screen.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NgcoreModule, StackedLineChartComponent],
+  imports: [RouterOutlet, NgcoreModule, AppScreenComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
 })
 
 export class AppComponent {
