@@ -133,7 +133,10 @@ export class BasicChartComponent {
     }
     
     private _updateChartThemeColors() {
-	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === false) { return; }
+	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === true) {
+	    this._scichartSurface.background = this._scichartTheme.sciChartBackground;
+	    return;
+	}
 	let surfacebackgroundColor = this._themeService.chartThemeVariables.sciChartSurfaceBackgroundColor;
 	if (surfacebackgroundColor !== undefined) { this._scichartSurface.background = surfacebackgroundColor; };
 	let axisColor = this._themeService.chartThemeVariables.sciChartAxisColor;

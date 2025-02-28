@@ -149,7 +149,7 @@ export class StackedLineChartComponent {
     }
     
     private _updateChartThemeColors() {
-	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === false) {
+	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === true) {
 	    this._scichartSurface.background = this._scichartTheme.sciChartBackground;
 	    return;
 	}
