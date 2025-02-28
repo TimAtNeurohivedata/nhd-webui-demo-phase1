@@ -48,7 +48,9 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
     }
 
     _autoUpdateDataRangeTimer(): void {
-	this._intervalId = setInterval(() => { this._updateDataNow(this._options.autoUpdateRange); }, this._options.autoUpdateRateMsec);
+	let scaleUpdateRate = this._options.autoUpdateSpeed < 1.0 ? 1.0 / this._options.autoUpdateSpeed : 1.0;
+	let autoUpdateRange = (1000 / this._options.autoUpdateRateMsec) / this._options.xAxisDensity * this._options.autoUpdateSpeed * scaleUpdateRate;
+	this._intervalId = setInterval(() => { this._updateDataNow(autoUpdateRange); }, this._options.autoUpdateRateMsec * scaleUpdateRate);
     }
 
     _createDataGenerators(): void {
@@ -96,7 +98,9 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
     }
     
     _autoUpdateDataRangeTimer(): void {
-	this._intervalId = setInterval(() => { this._updateDataNow(this._options.autoUpdateRange); }, this._options.autoUpdateRateMsec);
+	let scaleUpdateRate = this._options.autoUpdateSpeed < 1.0 ? 1.0 / this._options.autoUpdateSpeed : 1.0;
+	let autoUpdateRange = (1000 / this._options.autoUpdateRateMsec) / this._options.xAxisDensity * this._options.autoUpdateSpeed * scaleUpdateRate;
+	this._intervalId = setInterval(() => { this._updateDataNow(autoUpdateRange); }, this._options.autoUpdateRateMsec * scaleUpdateRate);
     }
 
     _createDataGenerator(): void {

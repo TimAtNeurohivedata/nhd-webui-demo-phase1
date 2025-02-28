@@ -17,6 +17,17 @@
     </mat-select>
   </mat-form-field>
 
+  <mat-form-field>
+    <mat-label>Auto Update Speed (seconds)</mat-label>
+    <mat-select [ngModel]='this.optionsService.chartOptions.dataGenerator.autoUpdateSpeed' (ngModelChange)='this.ngModelChange({ dataGenerator: { autoUpdateSpeed: $event } })'>
+      <mat-option value="0.1">0.1x</mat-option>
+      <mat-option value="1.0">1.0x</mat-option>
+      <mat-option value="2.0">2.0x</mat-option>
+      <mat-option value="10">10x</mat-option>
+      <mat-option value="100">100x</mat-option>
+    </mat-select>
+  </mat-form-field>
+
   <mat-checkbox [ngModel]='this.optionsService.chartOptions.theme.useNativeSciChartTheme' (ngModelChange)='this.ngModelChange({ theme: { useNativeSciChartTheme: $event } })'>
     Use Native SciChart Theme
   </mat-checkbox>
