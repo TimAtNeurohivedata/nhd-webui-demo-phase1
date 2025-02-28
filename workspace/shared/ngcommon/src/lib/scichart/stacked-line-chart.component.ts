@@ -5,7 +5,8 @@ import { ScichartAngularComponent } from "scichart-angular";
 import { SciChartJsNavyTheme } from 'scichart';
 import { SciChartSurface, TSciChart } from 'scichart';
 import { EAxisAlignment, EAutoRange, FastLineRenderableSeries, NumericAxis, NumberRange } from 'scichart';
-import { LeftAlignedOuterVerticallyStackedAxisLayoutStrategy } from 'scichart';
+import { LeftAlignedOuterVerticallyStackedAxisLayoutStrategy, Thickness } from 'scichart';
+import { DateLabelProvider, DateTimeNumericAxis, NumericLabelProvider, NumericTickProvider, TFormatLabelFn } from 'scichart';
 
 import { ChartOptionsService } from './chart-options.service';
 import { ChartThemeService } from './chart-theme.service';
@@ -72,16 +73,33 @@ export class StackedLineChartComponent {
     }
 
     private _createChartXAxes() {
+	// Create the first x-axis which has static time numbers that are not updated
 	// Create the first x-axis with Grey color
-	const xAxis = new NumericAxis(this._scichartWasmContext, {
-	    axisBorder: { borderTop: 1, color: "#EEEEEE" },
+	const xAxis1 = new NumericAxis(this._scichartWasmContext, {
 	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Always : EAutoRange.Once,
+	    axisBorder: { borderTop: 1, color: "#EEEEEE" },
 	    axisTitleStyle: { fontSize: 16, color: "#EEEEEE" },
 	    axisTitle: "Timeline",
 	    backgroundColor: "#EEEEEE11",
+	    labelProvider: new NumericLabelProviderFixed(),
 	    labelStyle:  { fontSize: 8, color: "#EEEEEE" },
 	});
-	this._scichartSurface.xAxes.add(xAxis);
+	xAxis1.tickProvider = new NumericTickProviderFullWidth(this._scichartWasmContext, 10);
+	this._scichartSurface.xAxes.add(xAxis1);
+
+	// Create the second axis which has the beginning date/time on left side and ending date/time on right side
+	// These are for the data that is currently being shown on the chart
+	const xAxis2 = new DateTimeNumericAxis(this._scichartWasmContext, {
+	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Always : EAutoRange.Once,
+	    axisTitleStyle: { color: "#EEEEEE" },
+	    backgroundColor: "#EEEEEE11",
+	    labelProvider: new DynamicDateLabelProvider(),
+            maxAutoTicks: 2,
+	    clipToXRange: true,
+	});
+	xAxis2.labelStyle.padding = new Thickness(0, 50, 0, 0);
+	xAxis2.tickProvider = new NumericTickProviderFullWidth(this._scichartWasmContext, 1);
+	this._scichartSurface.xAxes.add(xAxis2);
     }
 
     private _createChartYAxes() {
@@ -160,5 +178,113 @@ export class StackedLineChartComponent {
 	this._scichartRootElement = rootElement;
 	const result = await this._createChartSurface(rootElement);
 	return result;
+    }
+}
+
+class DynamicDateLabelProvider extends DateLabelProvider {
+    // Different thesholds of axis.visibleRange.max - min to trigger format changes
+    SECONDS_IN_DAY = 86400;
+    SECONDS_IN_HOUR = 60 * 60 * 6;
+    SECONDS_IN_MINUTE = 60 * 30;
+    private _initialUnixTimestamp = Math.floor(Date.now() / 1000);
+
+    constructor() {
+	super();
+	// Disable caching due to dynamic nature of the labels
+	this.useCache = false;
+    }
+
+    // Called for each label
+    override get formatLabel(): TFormatLabelFn {
+	return this._formatLabel;
+    }
+
+    private _formatLabel(dataValue: any): string {
+	const axisRange = this.parentAxis.visibleRange;
+
+	// assuming label dataValue is a unix timestamp / 1000 (attached to Date axis)
+	const unixTimeStamp = this._initialUnixTimestamp + dataValue;
+	const date = new Date(unixTimeStamp * 1000);
+	const hours = date.getUTCHours();
+	const minutes = date.getUTCMinutes();
+	const seconds = date.getUTCSeconds();
+	const milliseconds = date.getUTCMilliseconds();
+
+	let outputString: string = "";
+	const hoursString = hours <= 9 ? `0${hours}` : hours.toString(10);
+	const minutesString = minutes <= 9 ? `0${minutes}` : minutes.toString(10);
+	const secondsString = seconds <= 9 ? `0${seconds}` : seconds.toString(10);
+
+	// Format as DD:MM:YY
+	if (true) {
+	    let dateString = date.toLocaleDateString("en-GB", {
+		year: "2-digit",
+		month: "2-digit",
+		day: "2-digit"
+	    });
+	    outputString = outputString + dateString + " ";
+	}
+	
+	// Format as 00m00s 000ms
+	if (false) {
+	    let millisecondsString = `00` + milliseconds.toString(10);
+	    millisecondsString = `${minutesString}m${secondsString}s ${millisecondsString}ms`;
+	    outputString = outputString + millisecondsString + " ";
+	}
+
+	// Format as HH:MM:SS
+	if (true) {
+	    let hmsString = `${hoursString}:${minutesString}:${secondsString}`;
+	    outputString = outputString + hmsString + " ";
+	}
+
+	// Format as HH:MM
+	if (false) {
+	    let hmString = `${hoursString}:${minutesString}`;
+	    outputString = outputString + hmString + " ";
+	}
+
+	outputString = outputString;
+	return outputString
+    }
+}
+
+class NumericLabelProviderFixed extends DateLabelProvider {
+    // Called for each label
+    override get formatLabel(): TFormatLabelFn {
+	return this._formatLabel;
+    }
+
+    private _formatLabel(dataValue: any): string {
+        // Get the start and end values of the visible range
+	const axisRange = this.parentAxis.visibleRange;
+        const start = axisRange.min;
+        const end = axisRange.max;
+	let numericValue = Math.ceil((dataValue - start) / 10) * 10;
+	let numericString = numericValue.toFixed(1);
+	// console.log("min/max/diff/dataValue/numericValue: ", start, end, end - start, dataValue, numericValue);
+	return numericString;
+    }
+}
+
+class NumericTickProviderFullWidth extends NumericTickProvider {
+    constructor(private _wasmContext: TSciChart, private _tickPoints: number) {
+	super(_wasmContext);
+    }
+
+    override getMajorTicks(minorDelta: number, majorDelta: number, visibleRange: NumberRange): number[] {
+        // Get the start and end values of the visible range
+        let start = visibleRange.min;
+        let end = visibleRange.max;
+
+        // Create an array of ticks, always including the edge values
+	let ticks: any[] = [];
+	for (let i = 0 ; i <= this._tickPoints ; i++) {
+	    ticks.push(start + (end - start) / this._tickPoints * i);
+	}
+	// console.log("ticks: ", ticks);
+	
+	// Return the array of major tick values
+	return ticks;
     }
 }
