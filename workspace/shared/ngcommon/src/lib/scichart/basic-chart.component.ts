@@ -133,27 +133,39 @@ export class BasicChartComponent {
     }
     
     private _updateChartThemeColors() {
-	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === true) {
-	    this._scichartSurface.background = this._scichartTheme.sciChartBackground;
-	    return;
+	// Set the scichartSurface background color
+	let surfacebackgroundColor =this._themeService.chartThemeVariables.sciChartSurfaceBackgroundColor;
+	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === true || surfacebackgroundColor === undefined) {
+	    surfacebackgroundColor = this._scichartTheme.sciChartBackground;
 	}
-	let surfacebackgroundColor = this._themeService.chartThemeVariables.sciChartSurfaceBackgroundColor;
-	if (surfacebackgroundColor !== undefined) { this._scichartSurface.background = surfacebackgroundColor; };
+	this._scichartSurface.background = surfacebackgroundColor;
+
+	// If useNativeSciChartTheme is set then all the axes colors then use the default colors already set
+	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === true) { return; }
+
+	// Update the graph xAxes and yAxes colors
 	let axisColor = this._themeService.chartThemeVariables.sciChartAxisColor;
 	if (axisColor !== undefined) {
-	    this._scichartSurface.xAxes.get(0).axisBorder.color = axisColor;
-	    this._scichartSurface.xAxes.get(0).axisTitleStyle.color = axisColor;
-	    this._scichartSurface.xAxes.get(0).labelStyle.color = axisColor;
-	    this._scichartSurface.yAxes.get(0).axisBorder.color = axisColor;
-	    this._scichartSurface.yAxes.get(0).axisTitleStyle.color = axisColor;
-	    this._scichartSurface.yAxes.get(0).labelStyle.color = axisColor;
-	    this._scichartSurface.yAxes.get(1).axisBorder.color = axisColor;
-	    this._scichartSurface.yAxes.get(1).axisTitleStyle.color = axisColor;
-	    this._scichartSurface.yAxes.get(1).labelStyle.color = axisColor;
+	    for (let i = 0; i < this._scichartSurface.xAxes.size(); i++) {
+		this._scichartSurface.xAxes.get(i).axisBorder.color = axisColor;
+		this._scichartSurface.xAxes.get(i).axisTitleStyle.color = axisColor;
+		this._scichartSurface.xAxes.get(i).backgroundColor = surfacebackgroundColor;
+		this._scichartSurface.xAxes.get(i).labelStyle.color = axisColor;
+	    }
+	    for (let i = 0; i < this._scichartSurface.yAxes.size(); i++) {
+		this._scichartSurface.yAxes.get(i).axisBorder.color = axisColor;
+		this._scichartSurface.yAxes.get(i).axisTitleStyle.color = axisColor;
+		this._scichartSurface.yAxes.get(i).backgroundColor = surfacebackgroundColor;
+		this._scichartSurface.yAxes.get(i).labelStyle.color = axisColor;
+	    }
 	}
+
+	// Update the graph line stroke colors
 	let numericAxisColor = this._themeService.chartThemeVariables.sciChartNumericAxisColor;
 	if (numericAxisColor !== undefined) {
-	    this._scichartSurface.renderableSeries.get(0).stroke = numericAxisColor;
+	    for (let i = 0; i < this._scichartSurface.renderableSeries.size(); i++) {
+		this._scichartSurface.renderableSeries.get(i).stroke = numericAxisColor;
+	    }
 	}
     }
 
