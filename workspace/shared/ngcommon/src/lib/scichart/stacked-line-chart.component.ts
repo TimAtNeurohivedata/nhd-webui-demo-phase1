@@ -97,7 +97,7 @@ export class StackedLineChartComponent {
             maxAutoTicks: 2,
 	    clipToXRange: true,
 	});
-	xAxis2.labelStyle.padding = new Thickness(0, 50, 0, 0);
+	xAxis2.labelStyle.padding = new Thickness(0, 75, 0, 0);
 	xAxis2.tickProvider = new NumericTickProviderFullWidth(this._scichartWasmContext, 1);
 	this._scichartSurface.xAxes.add(xAxis2);
     }
@@ -134,9 +134,6 @@ export class StackedLineChartComponent {
 	// Cleanup the chart renderable series that is used for data lines
         this._scichartSurface.renderableSeries.clear();
 	
-	// Apply theme varaibles to the SciChartSurface
-	this._scichartSurface.title = "StackedLineChartCompenent";
-
 	// Call the funtions to create the other SciChart components that go with SciChartSurface
 	this._createChartXAxes();
 	this._createChartYAxes();
@@ -236,11 +233,10 @@ class DynamicDateLabelProvider extends DateLabelProvider {
 	    outputString = outputString + dateString + " ";
 	}
 	
-	// Format as 00m00s 000ms
+	// Format as HH:MM
 	if (false) {
-	    let millisecondsString = `00` + milliseconds.toString(10);
-	    millisecondsString = `${minutesString}m${secondsString}s ${millisecondsString}ms`;
-	    outputString = outputString + millisecondsString + " ";
+	    let hmString = `${hoursString}:${minutesString}`;
+	    outputString = outputString + hmString + " ";
 	}
 
 	// Format as HH:MM:SS
@@ -249,10 +245,18 @@ class DynamicDateLabelProvider extends DateLabelProvider {
 	    outputString = outputString + hmsString + " ";
 	}
 
-	// Format as HH:MM
+	// Format as 00m00s 000ms
 	if (false) {
-	    let hmString = `${hoursString}:${minutesString}`;
-	    outputString = outputString + hmString + " ";
+	    let millisecondsString = `00` + milliseconds.toString(10);
+	    millisecondsString = `${minutesString}m${secondsString}s ${millisecondsString}ms`;
+	    outputString = outputString + millisecondsString + " ";
+	}
+
+	// Format as 000ms
+	if (true) {
+	    let millisecondsString = milliseconds.toString(10).padStart(4, "0");
+	    millisecondsString = `${millisecondsString}ms`;
+	    outputString = outputString + millisecondsString + " ";
 	}
 
 	outputString = outputString;

@@ -28,7 +28,7 @@ export type ChartOptionsThemeType = {
 };
 
 export let chartOptionsDefault: ChartOptionsType = {
-    dataGenerator: { dataType: "SineWave", autoUpdateType: "Static", autoUpdateRateMsec: 50, autoUpdateRange: 10, fifoTotalLength: 2000, xAxisDensity: 10, yAxisAmplitude: 1 },
+    dataGenerator: { dataType: "SineWave", autoUpdateType: "Static", autoUpdateRateMsec: 50, autoUpdateRange: 1, fifoTotalLength: 2000, xAxisDensity: 20, yAxisAmplitude: 1 },
     graphLines: {},
     theme: { useNativeSciChartTheme: false },
 };
