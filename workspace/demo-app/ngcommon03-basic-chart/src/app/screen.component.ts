@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 import { NgcoreModule } from 'ngcore';
-import { NgcommonModule, BasicChartComponent, ChartOptionsContainerComponent, StackedLineChartComponent2 } from 'ngcommon';
+import { NgcommonModule, BasicChartComponent, ChartOptionsContainerComponent } from 'ngcommon';
 
 @Component({
     selector: 'app-screen',
