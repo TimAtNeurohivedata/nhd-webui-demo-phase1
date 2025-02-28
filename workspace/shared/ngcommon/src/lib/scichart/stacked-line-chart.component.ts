@@ -291,9 +291,9 @@ class NumericTickProviderFullWidth extends NumericTickProvider {
         // Create an array of ticks, always including the edge values
 	let ticks: any[] = [];
 	for (let i = 0 ; i <= this._tickPoints ; i++) {
-	    ticks.push(start + (end - start) / this._tickPoints * i);
+	    ticks.push(start + (end - start) * i / this._tickPoints);
 	}
-	// console.log("ticks: ", ticks);
+	// console.log("min/max/ticks: ", start, end, ticks);
 	
 	// Return the array of major tick values
 	return ticks;
