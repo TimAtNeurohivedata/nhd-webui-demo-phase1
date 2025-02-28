@@ -1,6 +1,5 @@
 import { makeIncArray, TSciChart, XyDataSeries } from "scichart";
 
-import { ChartOptionsService, chartOptionsDefault } from './chart-options.service';
 import { ChartOptionsDataGeneratorType, ChartOptionsDataTypeEnum, ChartOptionsAutoUpdateTypeEnum } from './chart-options.service';
 
 abstract class GeneratedXyDataSeries extends XyDataSeries {
@@ -31,18 +30,9 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
     dataSeries: ChartXyDataSeries[] = [];
 
     private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
-    private _options!: ChartOptionsDataGeneratorType;
     
-    constructor(private _wasmContext: TSciChart, private _arrayLength: number, private _optionsService?: ChartOptionsService, private _autoUpdateData: boolean = true) {
+    constructor(private _wasmContext: TSciChart, private _arrayLength: number, private _options: ChartOptionsDataGeneratorType, private _autoUpdateData: boolean = true) {
 	super();
-
-	// If the optionsService was passed as a parameter then use it for the chart options otherwise use the default options values
-	if (this._optionsService === undefined) {
-	    this._options = chartOptionsDefault.dataGenerator;
-	}
-	else {
-	    this._options = this._optionsService.chartOptions.dataGenerator;
-	}
 
 	// Create the data genereators for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
 	this._createDataGenerators();
@@ -68,7 +58,7 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
     _createDataGenerators(): void {
 	// Create the data genereators for the ChartXyDataSeries array
 	for (let i = 0; i < this._arrayLength ; i++) {
-	    this[i] = new ChartXyDataSeries(this._wasmContext, this._optionsService, false);
+	    this[i] = new ChartXyDataSeries(this._wasmContext, this._options, false);
 	}
     }
 
@@ -85,22 +75,13 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 }
 
 export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements ChartXyDataSeriesInterface {
-    private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
-    private _options!: ChartOptionsDataGeneratorType;
-
     public xyDataSeries: GeneratedXyDataSeries = this;
 
-    constructor(_wasmContext: TSciChart, optionsService?: ChartOptionsService, autoUpdateData: boolean = true) {
-	super(_wasmContext, 1000, 1, true);
-	
-	// If the optionsService was passed as a parameter then use it for the chart options otherwise use the default options values
-	if (optionsService === undefined) {
-	    this._options = chartOptionsDefault.dataGenerator;
-	}
-	else {
-	    this._options = optionsService.chartOptions.dataGenerator;
-	}
+    private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
 
+    constructor(_wasmContext: TSciChart, private _options: ChartOptionsDataGeneratorType, autoUpdateData: boolean = true) {
+	super(_wasmContext, _options.fifoTotalLength, 1, true);
+	
 	// Create the data genereator for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
 	this._createDataGenerator();
 	

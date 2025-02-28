@@ -61,7 +61,7 @@ export class BasicChartComponent {
             stroke: "blue",
             strokeThickness: 2,
         });
-	let xyDataSeries = new ChartXyDataSeries(this._scichartWasmContext, this._optionsService, true).xyDataSeries;
+	let xyDataSeries = new ChartXyDataSeries(this._scichartWasmContext, this._optionsService.chartOptions.dataGenerator, true);
         lineSeries.dataSeries = xyDataSeries;
         this._scichartSurface.renderableSeries.add(lineSeries);
     }

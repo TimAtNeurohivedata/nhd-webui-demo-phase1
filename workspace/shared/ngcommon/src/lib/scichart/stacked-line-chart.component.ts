@@ -59,7 +59,7 @@ export class StackedLineChartComponent {
     }
 
     private _createXyDataSeriesFromChartOptions() {
-	let xyDataSeriesArray = new ChartXyDataSeriesArray(this._scichartWasmContext, this.stackedLineCount, this._optionsService, true);
+	let xyDataSeriesArray = new ChartXyDataSeriesArray(this._scichartWasmContext, this.stackedLineCount, this._optionsService.chartOptions.dataGenerator, true);
 	for (let i = 0; i < this.stackedLineCount; i++) {
             const lineSeries = new FastLineRenderableSeries(this._scichartWasmContext, {
 		stroke: "blue",
