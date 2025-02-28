@@ -7,14 +7,93 @@ abstract class GeneratedXyDataSeries extends XyDataSeries {
     abstract autoUpdateDataRange(rangeCount: number): void;
 }
 
-export class XyDataSeriesService {
+interface ChartXyDataSeriesInterface {
+    autoUpdateDataRange(rangeCount: number): void;
+}
+
+abstract class ChartXyDataSeriesAbstractClass extends XyDataSeries implements ChartXyDataSeriesInterface {
+    protected _interface!: ChartXyDataSeriesInterface;
+
+    constructor(protected _wasmContext: TSciChart, private _fifoCapacity: number, private _amplitude: number, private _streamData: boolean, ...args: any[]) {
+        // Create an empty FIFO series
+	// When data reaches _fifoCapacity then old samples will be pushed and new samples appended to the end
+        super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
+
+        // Fill with NaN values up to _fifoCapacity
+	// This stops the stretching effect when Fifo series are filled with AutoRange
+	this.appendRange(Array(_fifoCapacity).fill(NaN), Array(_fifoCapacity).fill(NaN));
+    }
+
+    autoUpdateDataRange(rangeCount: number): void { return this._interface.autoUpdateDataRange(rangeCount); }
+}
+
+export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
+    dataSeries: ChartXyDataSeries[] = [];
+
+    private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
+    private _options!: ChartOptionsDataGeneratorType;
+    
+    constructor(private _wasmContext: TSciChart, private _arrayLength: number, private _optionsService?: ChartOptionsService, private _autoUpdateData: boolean = true) {
+	super();
+
+	// If the optionsService was passed as a parameter then use it for the chart options otherwise use the default options values
+	if (this._optionsService === undefined) {
+	    this._options = chartOptionsDefault.dataGenerator;
+	}
+	else {
+	    this._options = this._optionsService.chartOptions.dataGenerator;
+	}
+
+	// Create the data genereators for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
+	this._createDataGenerators();
+	
+	// Automatically update the data with the data generator if the autoUpdateData flag is true
+	if (_autoUpdateData) {
+	    // Update the data at least one time whether or not the dataGenerator autoUpdateType is Static/Dynamic/Streaming
+	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
+	    const staticData = this._options.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
+	    if (staticData) {
+		this._updateDataNow(this._options.fifoTotalLength);
+	    }
+	    else {
+		this._autoUpdateDataRangeTimer();
+	    }
+	}
+    }
+
+    _autoUpdateDataRangeTimer(): void {
+	this._intervalId = setInterval(() => { this._updateDataNow(this._options.autoUpdateRange); }, this._options.autoUpdateRateMsec);
+    }
+
+    _createDataGenerators(): void {
+	// Create the data genereators for the ChartXyDataSeries array
+	for (let i = 0; i < this._arrayLength ; i++) {
+	    this[i] = new ChartXyDataSeries(this._wasmContext, this._optionsService, false);
+	}
+    }
+
+    _updateDataNow(rangeCount: number): void {
+	if (this[0].xyDataSeries === undefined) {
+	    clearInterval(this._intervalId);
+	    this._intervalId = undefined;
+	    return;
+	}
+	for (let i = 0 ; i < this._arrayLength ; i++) {
+	    this[i].autoUpdateDataRange(rangeCount);	    
+	}
+    }
+}
+
+export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements ChartXyDataSeriesInterface {
     private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
     private _options!: ChartOptionsDataGeneratorType;
 
-    public xyDataSeries!: GeneratedXyDataSeries;
+    public xyDataSeries: GeneratedXyDataSeries = this;
 
-    constructor(private _wasmContext: TSciChart, optionsService?: ChartOptionsService, autoUpdateData: boolean = true) {
-	// If the optionsService was passed as a parameter then use it fo the chart options otherwise use the default options values
+    constructor(_wasmContext: TSciChart, optionsService?: ChartOptionsService, autoUpdateData: boolean = true) {
+	super(_wasmContext, 1000, 1, true);
+	
+	// If the optionsService was passed as a parameter then use it for the chart options otherwise use the default options values
 	if (optionsService === undefined) {
 	    this._options = chartOptionsDefault.dataGenerator;
 	}
@@ -39,59 +118,45 @@ export class XyDataSeriesService {
 	}
     }
     
-    _autoUpdateDataRangeTimer() {
+    _autoUpdateDataRangeTimer(): void {
 	this._intervalId = setInterval(() => { this._updateDataNow(this._options.autoUpdateRange); }, this._options.autoUpdateRateMsec);
     }
 
-    _createDataGenerator() {
+    _createDataGenerator(): void {
 	// Create the data genereator for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
 	const streamData = this._options.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
 	if (this._options.dataType === ChartOptionsDataTypeEnum.SineWave) {
-	    this.xyDataSeries = new SineWaveXyDataSeries(this._wasmContext, this._options.fifoTotalLength, 3.5, 1, streamData);
-	    this.xyDataSeries.autoUpdateDataRange(this._options.fifoTotalLength);
+	    this._interface = new SineWaveXyDataSeriesInterface(this, this._options.fifoTotalLength, 1, streamData, 3.5);
+	    this.autoUpdateDataRange(this._options.fifoTotalLength);
 	}
 	if (this._options.dataType === ChartOptionsDataTypeEnum.RandomData) {
-	    this.xyDataSeries = new RandomDataXyDataSeries(this._wasmContext, this._options.fifoTotalLength, 1, streamData);
-	    this.xyDataSeries.autoUpdateDataRange(this._options.fifoTotalLength);
+	    this._interface = new RandomDataXyDataSeriesInterface(this, this._options.fifoTotalLength, 1, streamData);
+	    this.autoUpdateDataRange(this._options.fifoTotalLength);
 	}
 	if (this._options.dataType === ChartOptionsDataTypeEnum.RandomWalk) {
-	    this.xyDataSeries = new RandomWalkXyDataSeries(this._wasmContext, this._options.fifoTotalLength, 1, streamData);
-	    this.xyDataSeries.autoUpdateDataRange(this._options.fifoTotalLength);
+	    this._interface = new RandomWalkXyDataSeriesInterface(this, this._options.fifoTotalLength, 1, streamData);
+	    this.autoUpdateDataRange(this._options.fifoTotalLength);
 	}
     }
 
-    _updateDataNow(rangeCount: number) {
+    _updateDataNow(rangeCount: number): void {
 	if (this.xyDataSeries === undefined) {
 	    clearInterval(this._intervalId);
 	    this._intervalId = undefined;
 	    return;
 	}
-	this.xyDataSeries.autoUpdateDataRange(rangeCount);
+	this.autoUpdateDataRange(rangeCount);
     }
 }
 
-export class SineWaveXyDataSeries extends GeneratedXyDataSeries {
+class SineWaveXyDataSeriesInterface implements ChartXyDataSeriesInterface {
     private _totalRangeCount: number = 0;
 
-    constructor (private _wasmContext: TSciChart, private _fifoCapacity: number, private _numberWaves: number, private _amplitude: number, private _streamData: boolean) {
-        // Create an empty FIFO series
-	// When data reaches fifoCapacity then old samples will be pushed and new samples appended to the end
-        super(_wasmContext, {
-	    containsNaN: true,
-	    dataIsSortedInX: true,
-	    dataEvenlySpacedInX: true,
-	    fifoCapacity: _fifoCapacity,
-	    fifoSweeping: true,
-	});
-	
-        // Fill with NaN values up to fifoCapacity
-	// This stops the stretching effect when Fifo series are filled with AutoRange
-	this.appendRange(Array(_fifoCapacity).fill(NaN), Array(_fifoCapacity).fill(NaN));
-    }
+    constructor (private _xyDataSeries: XyDataSeries, private _fifoCapacity: number, private _amplitude: number, private _streamData: boolean, private _numberWaves: number) {}
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._streamData ? this._totalRangeCount : this._totalRangeCount % this._fifoCapacity;
-	this.appendRange(
+	this._xyDataSeries.appendRange(
 	    Array.from(makeIncArray(rangeCount), (x: number) => x + xAxisOffset),
 	    Array.from(
 		makeIncArray(rangeCount),
@@ -102,28 +167,21 @@ export class SineWaveXyDataSeries extends GeneratedXyDataSeries {
     }
 }
 
-export class RandomDataXyDataSeries extends GeneratedXyDataSeries {
+export class SineWaveXyDataSeries extends ChartXyDataSeriesAbstractClass {
+    constructor(_wasmContext: TSciChart, _fifoCapacity: number, _amplitude: number, _streamData: boolean, ...args: any[]) {
+	super(_wasmContext, _fifoCapacity, _amplitude, _streamData, ...args);
+	this._interface = new SineWaveXyDataSeriesInterface(this, _fifoCapacity, _amplitude, _streamData, [...args][0]);
+    }
+}
+
+class RandomDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
     private _totalRangeCount: number = 0;
 
-    constructor (private _wasmContext: TSciChart, private _fifoCapacity: number, private _amplitude: number, private _streamData: boolean) {
-        // Create an empty FIFO series
-	// When data reaches fifoCapacity then old samples will be pushed and new samples appended to the end
-        super(_wasmContext, {
-	    containsNaN: true,
-	    dataIsSortedInX: true,
-	    dataEvenlySpacedInX: true,
-	    fifoCapacity: _fifoCapacity,
-	    fifoSweeping: true,
-	});
-	
-        // Fill with NaN values up to fifoCapacity
-	// This stops the stretching effect when Fifo series are filled with AutoRange
-	this.appendRange(Array(_fifoCapacity).fill(NaN), Array(_fifoCapacity).fill(NaN));
-    }
+    constructor (private _xyDataSeries: XyDataSeries, private _fifoCapacity: number, private _amplitude: number, private _streamData: boolean) {}
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._streamData ? this._totalRangeCount : this._totalRangeCount % this._fifoCapacity;
-	this.appendRange(
+	this._xyDataSeries.appendRange(
 	    Array.from(makeIncArray(rangeCount), (x: number) => x + xAxisOffset),
 	    Array.from(
 		makeIncArray(rangeCount),
@@ -132,35 +190,24 @@ export class RandomDataXyDataSeries extends GeneratedXyDataSeries {
 	);
 	this._totalRangeCount = this._totalRangeCount + rangeCount;
     }
+}
 
-    updateRange(rangeCount: number) {
-	this.appendRange(makeIncArray(rangeCount), Array.from({length: rangeCount}, () => Math.random() - 0.5));
+export class RandomDataXyDataSeries extends ChartXyDataSeriesAbstractClass {
+    constructor(_wasmContext: TSciChart, _fifoCapacity: number, _amplitude: number, _streamData: boolean) {
+	super(_wasmContext, _fifoCapacity, _amplitude, _streamData);
+	this._interface = new RandomDataXyDataSeriesInterface(this, _fifoCapacity, _amplitude, _streamData);
     }
 }
 
-export class RandomWalkXyDataSeries extends GeneratedXyDataSeries {
+class RandomWalkXyDataSeriesInterface implements ChartXyDataSeriesInterface {
     private _totalRangeCount: number = 0;
     private _lastRandomWalk: number = 0;
-    
-    constructor (private _wasmContext: TSciChart, private _fifoCapacity: number, private _amplitude: number, private _streamData: boolean) {
-        // Create an empty FIFO series
-	// When data reaches fifoCapacity then old samples will be pushed and new samples appended to the end
-        super(_wasmContext, {
-	    containsNaN: true,
-	    dataIsSortedInX: true,
-	    dataEvenlySpacedInX: true,
-	    fifoCapacity: _fifoCapacity,
-	    fifoSweeping: true,
-	});
-	
-        // Fill with NaN values up to fifoCapacity
-	// This stops the stretching effect when Fifo series are filled with AutoRange
-	this.appendRange(Array(_fifoCapacity).fill(NaN), Array(_fifoCapacity).fill(NaN));
-    }
+
+    constructor (private _xyDataSeries: XyDataSeries, private _fifoCapacity: number, private _amplitude: number, private _streamData: boolean) {}
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._streamData ? this._totalRangeCount : this._totalRangeCount % this._fifoCapacity;
-	this.appendRange(
+	this._xyDataSeries.appendRange(
 	    Array.from(makeIncArray(rangeCount), (x: number) => x + xAxisOffset),
 	    Array.from(
 		makeIncArray(rangeCount),
@@ -183,5 +230,12 @@ export class RandomWalkXyDataSeries extends GeneratedXyDataSeries {
 		})
 	);
 	this._totalRangeCount = this._totalRangeCount + rangeCount;
+    }
+}
+
+export class RandomWalkXyDataSeries extends ChartXyDataSeriesAbstractClass {
+    constructor(_wasmContext: TSciChart, _fifoCapacity: number, _amplitude: number, _streamData: boolean) {
+	super(_wasmContext, _fifoCapacity, _amplitude, _streamData);
+	this._interface = new RandomWalkXyDataSeriesInterface(this, _fifoCapacity, _amplitude, _streamData);
     }
 }

@@ -1,251 +1,164 @@
+import { Subscription } from 'rxjs';
 import { Component } from '@angular/core';
 
-import { makeIncArray, TSciChart, XyDataSeries } from "scichart";
-import { EAxisAlignment, ECoordinateMode, EHorizontalAnchorPoint, EWrapTo, NativeTextAnnotation }  from "scichart";
-import { FastLineRenderableSeries, LeftAlignedOuterVerticallyStackedAxisLayoutStrategy }  from "scichart";
-import { NumericAxis, NumberRange, SciChartSurface }  from "scichart";
-import { SciChartJsNavyTheme } from 'scichart';
 import { ScichartAngularComponent } from "scichart-angular";
+import { SciChartJsNavyTheme } from 'scichart';
+import { SciChartSurface, TSciChart } from 'scichart';
+import { EAxisAlignment, EAutoRange, FastLineRenderableSeries, NumericAxis, NumberRange } from 'scichart';
+import { LeftAlignedOuterVerticallyStackedAxisLayoutStrategy } from 'scichart';
 
-import { SettingsMatThemeService } from 'ngcore';
-
-let scichartThemeSysVariableMap: { [key: string]: [string, string] } = {
-    // "scichart-surface-background": ["--mat-sys-secondary-container", "#888888"],
-    "scichart-surface-background": ["--mat-sys-surface-container", "#888888"],
-    "scichart-surface-text-color": ["--mat-sys-primary", "#888888"],
-    "scichart-surface-axis-color": ["--mat-sys-primary", "#888888"],
-    "scichart-numeric-axis-color": ["--mat-sys-secondary", "#888888"],
-};
-let rootElementString: string | HTMLDivElement;
+import { ChartOptionsService } from './chart-options.service';
+import { ChartThemeService } from './chart-theme.service';
+import { ChartXyDataSeries, ChartXyDataSeriesArray } from './xydataseries';
 
 @Component({
     selector: 'nhd-ngcommon-scichart-stacked-line-chart',
     imports: [ScichartAngularComponent],
     standalone: true,
 
-    template: `<scichart-angular [initChart]="drawExample"></scichart-angular>`,
+    template: `<scichart-angular [initChart]="initChart"></scichart-angular>`,
 })
 
 export class StackedLineChartComponent {
-    private _sysVariables: any = [];
-    private _subscription: any;
-
-    public drawExample = drawExample;
-
-    constructor(private service: SettingsMatThemeService) {
-	this._sysVariables = service.getSysVariables();
-	this.updateScichartThemeSysVariableMap();
-	this._subscription = this.service.themeUpdated$.subscribe(() => {
-	    this._sysVariables = service.getSysVariables();
-	    this.updateScichartThemeSysVariableMap();
-	    drawExample(rootElementString);
-	});
-    }
-
-    updateScichartThemeSysVariableMap() {
-	Object.keys(scichartThemeSysVariableMap).forEach(key => {
-	    let sysVariableName: any = scichartThemeSysVariableMap[key][0];
-	    console.log(`Key: ${key}, Value: ${scichartThemeSysVariableMap[key]}`);
-	    let sysVariableValue: any = this.service.getSysVariableByName(sysVariableName).value;
-	    console.log("name, value: ", sysVariableName, sysVariableValue);
-	    if (sysVariableValue === undefined) { return; }
-	    sysVariableValue = this.convertRgbToHexIfNotHex(sysVariableValue);
-	    scichartThemeSysVariableMap[key][1] = sysVariableValue;
-	});
-    }
-
-
-    convertRgbToHexIfNotHex(color: string): string {
-	if (color.startsWith('#')) {
-	    return color; // Already in hex format, return as is
-	}
-
-	const rgbMatch = color.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
-	if (rgbMatch) {
-	    const r = parseInt(rgbMatch[1], 10);
-	    const g = parseInt(rgbMatch[2], 10);
-	    const b = parseInt(rgbMatch[3], 10);
-
-	    const toHex = (c: number): string => {
-		const hex = c.toString(16);
-		return hex.length === 1 ? '0' + hex : hex;
-	    };
-	    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-	}
-	return 'Invalid color format'; // Return an error message for invalid formats
-    }
-}
-
-export const drawExample = async (rootElement: string | HTMLDivElement) => {
-    rootElementString = rootElement;
-
-    // Lookup all of the theme colors first
-    const axisColor = scichartThemeSysVariableMap["scichart-surface-axis-color"][1];
-    const labelStyle = { fontSize: 8, color: scichartThemeSysVariableMap["scichart-surface-axis-color"][1], }; // type TTextStyle
-    const graphLineColor = scichartThemeSysVariableMap["scichart-numeric-axis-color"][1];
-    const graphBackgroundColor = scichartThemeSysVariableMap["scichart-surface-background"][1];
-
-    SciChartSurface.useWasmFromCDN();
-    const { sciChartSurface, wasmContext } = await SciChartSurface.create(rootElement, {
-        theme: new SciChartJsNavyTheme(),
-    });
-    sciChartSurface.background = graphBackgroundColor;
-
-    sciChartSurface.layoutManager.leftOuterAxesLayoutStrategy =
-        new LeftAlignedOuterVerticallyStackedAxisLayoutStrategy();
-
-    sciChartSurface.xAxes.add(new NumericAxis(wasmContext, {
-	axisTitle: "Timeline",
-	axisTitleStyle: { fontSize: 16, color: axisColor },
-	labelStyle: labelStyle,
-	axisBorder: { borderTop: 1, color: axisColor },
-    }));
-
-    // Add title annotation
-    sciChartSurface.annotations.add(
-        new NativeTextAnnotation({
-            // text: "Vertically Stacked Axis: Custom layout of axis to allow traces to overlap. Useful for ECG charts",
-            fontSize: 16,
-            // textColor: appTheme.ForegroundColor,
-            textColor: scichartThemeSysVariableMap["scichart-surface-text-color"][1],
-            x1: 0.5,
-            y1: 0,
-            opacity: 0.77,
-            horizontalAnchorPoint: EHorizontalAnchorPoint.Center,
-            xCoordinateMode: ECoordinateMode.Relative,
-            yCoordinateMode: ECoordinateMode.Relative,
-            wrapTo: EWrapTo.ViewRect,
-        })
-    );
-
-    const seriesCount: number = 20;
-    let dataSeriesArray = new StackedLineChartXyDataSeriesArray(wasmContext, seriesCount, 1000);
-    dataSeriesArray.updateRange(1000);
-
-    for (let i = 0; i < seriesCount; i++) {
-        const range = 10 / seriesCount;
-        const yAxis = new NumericAxis(wasmContext, {
-            id: "Y" + i,
-            visibleRange: new NumberRange(-range, range),
-            axisAlignment: EAxisAlignment.Left,
-            zoomExtentsToInitialRange: true,
-            maxAutoTicks: 5,
-            drawMinorGridLines: false,
-	    axisBorder: { borderTop: 0, borderBottom: 1, borderRight: 1, color: axisColor },
-            axisTitle: `Y ${i}`,
-	    axisTitleStyle: labelStyle,
-	    labelStyle,
-        });
-        sciChartSurface.yAxes.add(yAxis);
-
-        const lineSeries = new FastLineRenderableSeries(wasmContext, {
-            yAxisId: yAxis.id,
-            stroke: graphLineColor,
-            strokeThickness: 2,
-        });
-        lineSeries.dataSeries = dataSeriesArray[i]; // getRandomSinewave(wasmContext, 0, Math.random() * 3, Math.random() * 50, 10000, 10);
-        sciChartSurface.renderableSeries.add(lineSeries);
-    }
-
-    // Optional: Add some interactivity modifiers to enable zooming and panning
-    sciChartSurface.chartModifiers.add(
-        // new YAxisDragModifier(),
-        // new XAxisDragModifier(),
-        // new RubberBandXyZoomModifier({ xyDirection: EXyDirection.XDirection, executeOn: EExecuteOn.MouseRightButton }),
-        // new MouseWheelZoomModifier({ xyDirection: EXyDirection.YDirection }),
-        // new ZoomExtentsModifier()
-    );
-
-    // Now let's use a timeout to appendRange() new values every 20ms.
-    // using removeRange() causes the number of points in the series to remain fixed and the chart to scroll
-    const updateCallback = () => {
-	dataSeriesArray.updateRange(1000);
-    }
-
-    let timeoutMsec = 20;
-    setTimeout(() => {
-	updateCallback();
-	setInterval(updateCallback, timeoutMsec);
-    }, timeoutMsec);
-
-    return { sciChartSurface, wasmContext };
-};
-
-export class StackedLineChartXyDataSeriesArray extends Array<StackedLineChartXyDataSeries> {
-    dataSeries: StackedLineChartXyDataSeries[] = [];
+    initChart: any;
+    stackedLineCount: number = 20;
     
-    constructor(private _wasmContext: TSciChart, private _arrayLength: number, private _fifoCapacity: number) {
-	super();
-	for (let i = 0; i < _arrayLength ; i++) {
-	    this[i] = new StackedLineChartXyDataSeries(_wasmContext, _fifoCapacity);
-	}
+    private _optionsSubscription!: Subscription;
+    private _scichartRootElement!: string | HTMLDivElement;
+    private _scichartSurface!: SciChartSurface;
+    private _scichartTheme: SciChartJsNavyTheme = new SciChartJsNavyTheme();
+    private _scichartWasmContext!: TSciChart;
+    private _themeSubscription!: Subscription;
+
+    constructor(private _optionsService: ChartOptionsService, private _themeService: ChartThemeService) {
+	this.initChart = (rootElement: string | HTMLDivElement) => { return this._initChart(rootElement); }
     }
 
-    updateRange(dataCount: number) {
-	for (let i = 0 ; i < this._arrayLength ; i++) {
-	    this[i].updateRange(dataCount);
-	}
-    }
-}
+    private async _createChartSurface(rootElement: string | HTMLDivElement) {
+	// Create a SciChartSurface
+	SciChartSurface.useWasmFromCDN();
+	const { sciChartSurface, wasmContext } = await SciChartSurface.create(this._scichartRootElement, {
+            theme: this._scichartTheme
+	});
+	this._scichartSurface = sciChartSurface;
+	this._scichartWasmContext = wasmContext;
 
-export class StackedLineChartXyDataSeries extends XyDataSeries {
-    constructor (private _wasmContext: TSciChart, private _fifoCapacity: number) {
-        // Create an empty FIFO series
-	// When data reaches fifoCapacity then old samples will be pushed and new samples appended to the end
-        super(_wasmContext, {
-	    containsNaN: true,
-	    dataIsSortedInX: true,
-	    dataEvenlySpacedInX: true,
-	    fifoCapacity: _fifoCapacity,
+	// Rebuild the SciChartSurface for the first time
+	this._rebuildChartSurface();
+
+	// Subscribe to rebuild the chart if any of the ChartOptions are updated
+	this._optionsSubscription = this._optionsService.chartOptions$.subscribe(() => {
+	    this._rebuildChartSurface();
+	});
+	this._themeSubscription = this._themeService.chartThemeVariables$.subscribe(() => {
+	    this._rebuildChartSurface();
 	});
 	
-        // Fill with NaN values up to fifoCapacity
-	// This stops the stretching effect when Fifo series are filled with AutoRange
-	this.appendRange(Array(_fifoCapacity).fill(NaN), Array(_fifoCapacity).fill(NaN));
+	// Return the values expected for the <scichart-angular> [initChart] property binding function
+	return { sciChartSurface, wasmContext };
     }
 
-    updateRange(rangeCount: number) {
-	this.appendRange(makeIncArray(rangeCount), Array.from({length: rangeCount}, () => Math.random() - 0.5));
-    }
-}
-
-export class RandomWalkGenerator {
-    private readonly bias!: number;
-    private last!: number;
-    private i!: number;
-    private _seed!: number;
-
-    constructor(bias: number = 0.01) {
-        this.bias = bias;
-        this.reset();
+    private _createXyDataSeriesFromChartOptions() {
+	let xyDataSeriesArray = new ChartXyDataSeriesArray(this._scichartWasmContext, this.stackedLineCount, this._optionsService, true);
+	for (let i = 0; i < this.stackedLineCount; i++) {
+            const lineSeries = new FastLineRenderableSeries(this._scichartWasmContext, {
+		stroke: "blue",
+		strokeThickness: 2,
+		yAxisId: this._scichartSurface.yAxes.get(i).id,
+            });
+            lineSeries.dataSeries = xyDataSeriesArray[i];
+            this._scichartSurface.renderableSeries.add(lineSeries);
+	}
     }
 
-    public Seed(seed: number) {
-        this._seed = seed % 2147483647;
-        if (this._seed <= 0) this._seed += 2147483646;
-        return this;
+    private _createChartXAxes() {
+	// Create the first x-axis with Grey color
+	const xAxis = new NumericAxis(this._scichartWasmContext, {
+	    axisBorder: { borderTop: 1, color: "#EEEEEE" },
+	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Always : EAutoRange.Once,
+	    axisTitleStyle: { fontSize: 16, color: "#EEEEEE" },
+	    axisTitle: "Timeline",
+	    backgroundColor: "#EEEEEE11",
+	    labelStyle:  { fontSize: 8, color: "#EEEEEE" },
+	});
+	this._scichartSurface.xAxes.add(xAxis);
     }
 
-    public reset() {
-        this.i = 0;
-        this.last = 0;
+    private _createChartYAxes() {
+	// Set the chart layout strategy for the left outer axes
+	let layoutStrategy = new LeftAlignedOuterVerticallyStackedAxisLayoutStrategy();
+	this._scichartSurface.layoutManager.leftOuterAxesLayoutStrategy = layoutStrategy;
+
+	// Create the left innner y-axis for the stacked lines with Green color
+	for (let i = 0; i < this.stackedLineCount; i++) {
+	    const leftYAxis = new NumericAxis(this._scichartWasmContext, {
+		axisAlignment: EAxisAlignment.Left,
+		axisBorder: { borderTop: 0, borderBottom: 1, borderRight: 1, color: "#228B22" },
+		axisTitle: `Y ${i}`,
+		axisTitleStyle: { fontSize: 8, color: "#228B22" },
+		backgroundColor: "#228B2222",
+		drawMinorGridLines: false,
+		id: "Y" + i,
+		labelStyle: { fontSize: 8, color: "#228B22" },
+		maxAutoTicks: 5,
+		visibleRange: new NumberRange(-1.0, 1.0),
+		zoomExtentsToInitialRange: true,
+	    });
+	    this._scichartSurface.yAxes.add(leftYAxis);
+	}
     }
 
-    public getRandomWalkSeries(count: number): { xValues: number[]; yValues: number[] } {
-        const xValues: number[] = [];
-        const yValues: number[] = [];
-        const random = () => (this._seed === undefined ? Math.random() : (this.nextSeeded() - 1) / 2147483646);
-        for (let i = 0; i < count; i++) {
-            const next: number = this.last + (random() - 0.5 + this.bias);
-            xValues.push(this.i++);
-            yValues.push(next);
-            this.last = next;
-        }
+    private _rebuildChartSurface() {
+	// Cleanup the chart xAxes and yAxes
+	this._scichartSurface.xAxes.clear();
+	this._scichartSurface.yAxes.clear();
+	
+	// Cleanup the chart renderable series that is used for data lines
+        this._scichartSurface.renderableSeries.clear();
+	
+	// Apply theme varaibles to the SciChartSurface
+	this._scichartSurface.title = "StackedLineChartCompenent";
 
-        return { xValues, yValues };
+	// Call the funtions to create the other SciChart components that go with SciChartSurface
+	this._createChartXAxes();
+	this._createChartYAxes();
+
+	// Create data for the graph
+	this._createXyDataSeriesFromChartOptions();
+
+	// Update the SciChartSurface theme colors
+	this._updateChartThemeColors();
+    }
+    
+    private _updateChartThemeColors() {
+	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === false) {
+	    this._scichartSurface.background = this._scichartTheme.sciChartBackground;
+	    return;
+	}
+	let surfacebackgroundColor = this._themeService.chartThemeVariables.sciChartSurfaceBackgroundColor;
+	if (surfacebackgroundColor !== undefined) { this._scichartSurface.background = surfacebackgroundColor; };
+	let axisColor = this._themeService.chartThemeVariables.sciChartAxisColor;
+	if (axisColor !== undefined) {
+	    this._scichartSurface.xAxes.get(0).axisBorder.color = axisColor;
+	    this._scichartSurface.xAxes.get(0).axisTitleStyle.color = axisColor;
+	    this._scichartSurface.xAxes.get(0).labelStyle.color = axisColor;
+	    for (let i = 0; i < this.stackedLineCount; i++) {
+		this._scichartSurface.yAxes.get(i).axisBorder.color = axisColor;
+		this._scichartSurface.yAxes.get(i).axisTitleStyle.color = axisColor;
+		this._scichartSurface.yAxes.get(i).labelStyle.color = axisColor;
+	    }
+	}
+	let numericAxisColor = this._themeService.chartThemeVariables.sciChartNumericAxisColor;
+	if (numericAxisColor !== undefined) {
+	    for (let i = 0; i < this.stackedLineCount; i++) {
+		this._scichartSurface.renderableSeries.get(i).stroke = numericAxisColor;
+	    }
+	}
     }
 
-    private nextSeeded() {
-        return (this._seed = (this._seed * 16807) % 2147483647);
+    private async _initChart(rootElement: string | HTMLDivElement) {
+	this._scichartRootElement = rootElement;
+	const result = await this._createChartSurface(rootElement);
+	return result;
     }
 }

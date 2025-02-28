@@ -8,7 +8,7 @@ import { EAxisAlignment, EAutoRange, FastLineRenderableSeries, NumericAxis, Numb
 
 import { ChartOptionsService } from './chart-options.service';
 import { ChartThemeService } from './chart-theme.service';
-import { XyDataSeriesService, SineWaveXyDataSeries } from './xydataseries';
+import { ChartXyDataSeries } from './xydataseries';
 
 @Component({
     selector: 'nhd-ngcommon-scichart-basic-chart',
@@ -57,25 +57,24 @@ export class BasicChartComponent {
     }
 
     private _createXyDataSeriesFromChartOptions() {
-	let xyDataSeries = new XyDataSeriesService(this._scichartWasmContext, this._optionsService, true).xyDataSeries;
-
         const lineSeries = new FastLineRenderableSeries(this._scichartWasmContext, {
             stroke: "blue",
             strokeThickness: 2,
         });
+	let xyDataSeries = new ChartXyDataSeries(this._scichartWasmContext, this._optionsService, true).xyDataSeries;
         lineSeries.dataSeries = xyDataSeries;
         this._scichartSurface.renderableSeries.add(lineSeries);
     }
 
     private _createChartXAxes() {
-	// Create the first x-axis
+	// Create the first x-axis with Grey color
 	const xAxis = new NumericAxis(this._scichartWasmContext, {
 	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Always : EAutoRange.Once,
 	    axisTitleStyle: { color: "#EEEEEE" },
 	    axisTitle: "X Axis",
 	    axisBorder: {
 		borderTop: 1,
-		color: "#EEEEEE" // Green color
+		color: "#EEEEEE"
 	    },
 	    backgroundColor: "#EEEEEE11",
 	});
@@ -83,7 +82,7 @@ export class BasicChartComponent {
     }
 
     private _createChartYAxes() {
-	// Create the left y-axis
+	// Create the left y-axis with Green color
 	const leftYAxis = new NumericAxis(this._scichartWasmContext, {
 	    axisAlignment: EAxisAlignment.Left,
 	    axisTitleStyle: { color: "#228B22" },
@@ -97,14 +96,14 @@ export class BasicChartComponent {
 	});
 	this._scichartSurface.yAxes.add(leftYAxis);
 
-	// Create the right y-axis
+	// Create the right y-axis with Blue color
 	const rightYAxis = new NumericAxis(this._scichartWasmContext, {
 	    axisTitleStyle: { color: "#368BC1" },
 	    id: "RightAxis",
 	    axisTitle: "Right Axis",
 	    axisBorder: {
 		borderLeft: 1,
-		color: "#368BC1" // Blue color
+		color: "#368BC1"
 	    },
 	    backgroundColor: "#368BC111"
 	});
