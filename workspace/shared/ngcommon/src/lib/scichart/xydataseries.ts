@@ -1,6 +1,7 @@
 import { makeIncArray, TSciChart, XyDataSeries } from "scichart";
 
 import { ChartOptionsDataGeneratorType, ChartOptionsDataTypeEnum, ChartOptionsAutoUpdateTypeEnum } from './chart-options.service';
+import { eegFixedData01 } from './eegfixeddata01';
 
 interface ChartXyDataSeriesInterface {
     autoUpdateDataRange(rangeCount: number): void;
@@ -118,6 +119,10 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 	    this._interface = new RandomWalkXyDataSeriesInterface(this, this._options.fifoTotalLength, this._options.xAxisDensity, this._options.yAxisAmplitude, streamData);
 	    this.autoUpdateDataRange(this._options.fifoTotalLength);
 	}
+	if (this._options.dataType === ChartOptionsDataTypeEnum.EegFixedData) {
+	    this._interface = new EegFixedDataXyDataSeriesInterface(this, this._options.fifoTotalLength, this._options.xAxisDensity, this._options.yAxisAmplitude, streamData);
+	    this.autoUpdateDataRange(this._options.fifoTotalLength);
+	}
     }
 
     _updateDataNow(rangeCount: number): void {
@@ -218,5 +223,48 @@ export class RandomWalkXyDataSeries extends ChartXyDataSeriesAbstractClass {
     constructor(_wasmContext: TSciChart, _fifoCapacity: number, _density: number, _amplitude: number, _streamData: boolean) {
 	super(_wasmContext, _fifoCapacity, _density, _amplitude, _streamData);
 	this._interface = new RandomWalkXyDataSeriesInterface(this, _fifoCapacity, _density, _amplitude, _streamData);
+    }
+}
+
+class EegFixedDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
+    private _eegFixedDataMaxX: number = -1000;
+    private _eegFixedDataMinY: number = 1000;
+    private _eegFixedDataMaxY: number = 0;
+    private _eegFixedDataOffsetX: number = 0;
+    private _eegFixedDataOffsetY: number = 0;
+    private _scaleXAxis: number = 1.0;
+    private _scaleYAxis: number = 1.0
+    private _totalRangeCount: number = 0;
+
+    constructor (private _xyDataSeries: XyDataSeries, private _fifoCapacity: number, private _density: number, private _amplitude: number, private _streamData: boolean) {
+	for (let i = 0; i < eegFixedData01.length ; i++) {
+	    if (eegFixedData01[i][0] > this._eegFixedDataMaxX) { this._eegFixedDataMaxX = eegFixedData01[i][0]; }
+	    if (eegFixedData01[i][1] > this._eegFixedDataMaxY) { this._eegFixedDataMaxY = eegFixedData01[i][1]; }
+	    if (eegFixedData01[i][1] < this._eegFixedDataMinY) { this._eegFixedDataMinY = eegFixedData01[i][1]; }
+	    this._eegFixedDataOffsetY = -this._eegFixedDataMinY - (this._eegFixedDataMaxY - this._eegFixedDataMinY) / 2;
+	}
+	this._scaleXAxis = 100.0 / this._eegFixedDataMaxX;
+	this._scaleYAxis = this._amplitude / -75.0;
+    }
+
+    autoUpdateDataRange(rangeCount: number): void {
+	let xAxisOffset = this._streamData ? this._totalRangeCount : this._totalRangeCount % this._fifoCapacity;
+	if (xAxisOffset + rangeCount >= eegFixedData01.length) {
+	    xAxisOffset = 0;
+	    this._eegFixedDataOffsetX = this._eegFixedDataOffsetX + eegFixedData01[this._totalRangeCount][0];
+	    this._totalRangeCount = 0;
+	};
+	this._xyDataSeries.appendRange(
+	    Array.from(makeIncArray(rangeCount), (x: number) => (eegFixedData01[x + xAxisOffset][0] + this._eegFixedDataOffsetX) * this._scaleXAxis),
+	    Array.from(makeIncArray(rangeCount), (x: number) => (eegFixedData01[x + xAxisOffset][1] + this._eegFixedDataOffsetY) * this._scaleYAxis)
+	);
+	this._totalRangeCount = this._totalRangeCount + rangeCount;
+    }
+}
+
+export class EegFixedDataXyDataSeries extends ChartXyDataSeriesAbstractClass {
+    constructor(_wasmContext: TSciChart, _fifoCapacity: number, _density: number, _amplitude: number, _streamData: boolean) {
+	super(_wasmContext, _fifoCapacity, _density, _amplitude, _streamData);
+	this._interface = new EegFixedDataXyDataSeriesInterface(this, _fifoCapacity, _density, _amplitude, _streamData);
     }
 }

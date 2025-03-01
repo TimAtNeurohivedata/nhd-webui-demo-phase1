@@ -7,7 +7,7 @@ export type ChartOptionsType = {
     theme: ChartOptionsThemeType;
 };
 
-export enum ChartOptionsDataTypeEnum { SineWave = "SineWave", RandomData = "RandomData", RandomWalk = "RandomWalk" };
+export enum ChartOptionsDataTypeEnum { SineWave = "SineWave", RandomData = "RandomData", RandomWalk = "RandomWalk", EegFixedData = "EegFixedData" };
 export enum ChartOptionsAutoUpdateTypeEnum { Static = "Static", Dynamic = "Dynamic", Stream = "Stream" };
 
 export type ChartOptionsDataGeneratorType = {
