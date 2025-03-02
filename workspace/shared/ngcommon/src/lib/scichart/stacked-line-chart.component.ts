@@ -17,11 +17,11 @@ import { ChartXyDataSeries, ChartXyDataSeriesArray } from './xydataseries';
     imports: [ScichartAngularComponent],
     standalone: true,
 
-    template: `<scichart-angular [initChart]="initChart"></scichart-angular>`,
+    template: `<scichart-angular [initChart]="initStackedLineChart">`,
 })
 
 export class StackedLineChartComponent {
-    initChart: any;
+    initStackedLineChart: any;
     stackedLineCount: number = 20;
     
     private _optionsSubscription!: Subscription;
@@ -32,7 +32,7 @@ export class StackedLineChartComponent {
     private _themeSubscription!: Subscription;
 
     constructor(private _optionsService: ChartOptionsService, private _themeService: ChartThemeService) {
-	this.initChart = (rootElement: string | HTMLDivElement) => { return this._initChart(rootElement); }
+	this.initStackedLineChart = (rootElement: string | HTMLDivElement) => { return this._initStackedLineChart(rootElement); }
     }
 
     private async _createChartSurface(rootElement: string | HTMLDivElement) {
@@ -188,7 +188,7 @@ export class StackedLineChartComponent {
 	}
     }
 
-    private async _initChart(rootElement: string | HTMLDivElement) {
+    private async _initStackedLineChart(rootElement: string | HTMLDivElement) {
 	this._scichartRootElement = rootElement;
 	const result = await this._createChartSurface(rootElement);
 	return result;
