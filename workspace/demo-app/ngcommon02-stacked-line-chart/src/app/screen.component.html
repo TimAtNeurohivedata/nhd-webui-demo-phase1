@@ -1,8 +1,15 @@
 <div class="mat-app-background" style="height: 100%;">
   <nhd-ngcore-flex-splitter-horizontal>
-    <div class="nhd-panel-center-text" style="flex: 1 1 auto; height: 100%;">
-      <nhd-ngcommon-scichart-stacked-line-chart style="height: 100%; width: 100%;">
-      </nhd-ngcommon-scichart-stacked-line-chart>
+    <div class="nhd-panel-center-text" style="flex: 1 1 auto; height: 100%; display: flex; flex-direction: column;">
+      <div style="flex: 1 0 90%; width: 100%;">
+	<nhd-ngcommon-scichart-stacked-line-chart #ComponentStackedLineChart>
+	</nhd-ngcommon-scichart-stacked-line-chart>
+      </div>
+
+      <div style="flex: 1 1 10%; width: 100%;">
+	<nhd-ngcommon-scichart-overview-chart [onInit$]="ComponentStackedLineChart.onInit$" [scichartSurface]="ComponentStackedLineChart.scichartSurface">
+	</nhd-ngcommon-scichart-overview-chart>
+      </div>
     </div>
 
     <nhd-ngcore-flex-splitter-seperator [paneDirection]="'right'" [paneOpen]="false">

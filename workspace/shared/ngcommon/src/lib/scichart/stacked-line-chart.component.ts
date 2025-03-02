@@ -1,4 +1,4 @@
-import { Subscription } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { Component } from '@angular/core';
 
 import { ScichartAngularComponent } from "scichart-angular";
@@ -17,11 +17,13 @@ import { ChartXyDataSeries, ChartXyDataSeriesArray } from './xydataseries';
     imports: [ScichartAngularComponent],
     standalone: true,
 
-    template: `<scichart-angular [initChart]="initStackedLineChart">`,
+    template: `<scichart-angular [initChart]="initStackedLineChart" (onInit)="onInit$.next(true)"></scichart-angular>`,
 })
 
 export class StackedLineChartComponent {
+    onInit$ = new BehaviorSubject<boolean>(false);
     initStackedLineChart: any;
+    scichartSurface!: SciChartSurface;
     stackedLineCount: number = 20;
     
     private _optionsSubscription!: Subscription;
@@ -43,6 +45,7 @@ export class StackedLineChartComponent {
 	});
 	this._scichartSurface = sciChartSurface;
 	this._scichartWasmContext = wasmContext;
+	this.scichartSurface = sciChartSurface;
 
 	// Rebuild the SciChartSurface for the first time
 	this._rebuildChartSurface();
@@ -133,6 +136,9 @@ export class StackedLineChartComponent {
     }
 
     private _rebuildChartSurface() {
+	// Let other components know the chart is reinitializing
+	this.onInit$.next(false);
+
 	// Cleanup the chart xAxes and yAxes
 	this._scichartSurface.xAxes.clear();
 	this._scichartSurface.yAxes.clear();
@@ -149,6 +155,9 @@ export class StackedLineChartComponent {
 
 	// Update the SciChartSurface theme colors
 	this._updateChartThemeColors();
+
+	// Let other components know the chart is finished reinitializing
+	this.onInit$.next(true);
     }
     
     private _updateChartThemeColors() {
