@@ -298,8 +298,16 @@ class NumericTickProviderFullWidth extends NumericTickProvider {
 	    ticks.push(start + (end - start) * i / this._tickPoints);
 	}
 	// console.log("min/max/ticks: ", start, end, ticks);
-	
-	// Return the array of major tick values
+
+	// If the last tick is slightly higher than the visibleRange.max then it will not qureied for NumericLabelProviderFixed
+	// When this happens this last label on bottom right will flash occasinally
+	// Example data:
+	// visibleRange.start = 21.17988394584139  visibleRange.End = 118.2301740812379
+	// ticks = [21.17988394584139, 30.88491295938104, 40.5899419729207, 50.29497098646035, 60, 69.70502901353964, 79.41005802707932, 89.11508704061896, 98.8201160541586, 108.52514506769825, 118.23017408123792]
+	if (ticks[this._tickPoints] > end) { ticks[this._tickPoints] = end; }
+
+	// Return the ticks array that contains the xAxis value where each majro tick will be placed
+	// (which is why last one flases if just slightly higher then visbleRange.end)
 	return ticks;
     }
 }
