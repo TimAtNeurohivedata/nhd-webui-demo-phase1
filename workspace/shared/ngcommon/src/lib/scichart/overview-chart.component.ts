@@ -22,7 +22,7 @@ export class OverviewChartComponent {
     @Input('scichartSurface') scichartSurface!: SciChartSurface;
 
     initChart: any;
-    onInit = this._onInit;
+    onInit = this.__onInit;
     
     private _onInitSubscription!: Subscription;
     private _scichartDeleted = false;
@@ -32,7 +32,7 @@ export class OverviewChartComponent {
     private _scichartTheme: SciChartJsNavyTheme = new SciChartJsNavyTheme();
     
     constructor(private _optionsService: ChartOptionsService, private _themeService: ChartThemeService) {
-	this.initChart = (rootElement: string | HTMLDivElement) => { return this._initOverview(this.scichartSurface, rootElement); }
+	this.initChart = (rootElement: string | HTMLDivElement) => { return this.__initOverview(this.scichartSurface, rootElement); }
     }
 
     private async _createOverview(scichartSurface: SciChartSurface, rootElement: string | HTMLDivElement) {
@@ -41,17 +41,19 @@ export class OverviewChartComponent {
             // prevent default size settings
 	    disableAspect: true,
             theme: this._scichartTheme,
-            // transformRenderableSeries: getOverviewSeries,
         });
 	this._scichartOverview = scichartOverview;
 	this._scichartRootElement = rootElement;
-	    
+
 	// Default padding is 10
 	// overviewXAxis provides a shortcut to overviewSciChartSurface.xAxes.get(0)
 	scichartOverview.overviewXAxis.isVisible = true;
 	scichartOverview.overviewXAxis.isInnerAxis = true;
 	scichartOverview.overviewXAxis.drawMinorGridLines = false;
 	scichartOverview.overviewXAxis.labelProvider.precision = 0;
+
+	// Update the SciChartSurface theme colors
+	this._updateChartThemeColors();
 
 	// Subscribe to rebuild the chart if any of the ChartSurface is updated and ready
 	if (this._onInitSubscription === undefined) {
@@ -63,12 +65,26 @@ export class OverviewChartComponent {
 	return { sciChartSurface: scichartOverview.overviewSciChartSurface };
     }
 
-    private async _initOverview(scichartSurface: SciChartSurface, rootElement: string | HTMLDivElement) {
+    private _updateChartThemeColors() {
+	// Set the scichartOverview background color and tickTextBrush color which can only be done by applying it to a theme
+	let scichartOverviewTheme: SciChartJsNavyTheme = new SciChartJsNavyTheme();
+	let overviewBackgroundColor = this._themeService.chartThemeVariables.sciChartSurfaceBackgroundColor;
+	let tickTextBrushColor = this._themeService.chartThemeVariables.sciChartAxisColor;
+	if (this._optionsService.chartOptions.theme.useNativeSciChartTheme === true) {
+	    overviewBackgroundColor = this._scichartTheme.sciChartBackground;
+	    tickTextBrushColor = this._scichartTheme.tickTextBrush;
+	}
+	if (overviewBackgroundColor !== undefined) { scichartOverviewTheme.sciChartBackground = overviewBackgroundColor; }
+	if (tickTextBrushColor !== undefined) { scichartOverviewTheme.tickTextBrush = tickTextBrushColor; }
+	this._scichartOverview.applyTheme(scichartOverviewTheme);
+    }
+
+    private async __initOverview(scichartSurface: SciChartSurface, rootElement: string | HTMLDivElement) {
 	const result = await this._createOverview(scichartSurface, rootElement);
 	return result;
     }
 
-    private _onInit(onInit: boolean) {
+    private __onInit(onInit: boolean) {
 	if (onInit === false) {
 	    this._scichartOverview.delete();
 	    this._scichartDeleted = true;
