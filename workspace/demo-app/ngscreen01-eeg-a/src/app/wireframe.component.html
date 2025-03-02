@@ -61,7 +61,7 @@
 
     <div class="grid-column grid-column-2b" oasis-wireframe3-data="grid-column-2b">
       <div class="channel-traces grid-panel" oasis-wireframe4-data="channel-traces">
-	<nhd-ngcommon-scichart-stacked-line-chart>
+	<nhd-ngcommon-scichart-stacked-line-chart #ComponentStackedLineChart>
 	</nhd-ngcommon-scichart-stacked-line-chart>
       </div>
     </div>
@@ -75,6 +75,8 @@
 
     <div class="grid-column grid-column-3b" oasis-wireframe3-data="grid-column-3b">
       <div class="page-timebase grid-panel" oasis-wireframe4-data="page-timebase">
+	<nhd-ngcommon-scichart-overview-chart [onInit$]="ComponentStackedLineChart.onInit$" [scichartSurface]="ComponentStackedLineChart.scichartSurface">
+	</nhd-ngcommon-scichart-overview-chart>
       </div>
 
       <div class="session-map grid-panel" oasis-wireframe4-data="session-map">

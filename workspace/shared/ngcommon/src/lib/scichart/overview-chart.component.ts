@@ -40,6 +40,7 @@ export class OverviewChartComponent {
 	const scichartOverview = await SciChartOverview.create(scichartSurface, rootElement, {
             // prevent default size settings
 	    disableAspect: true,
+	    padding: { top: 0, bottom: 0, left: 10, right: 10 },
             theme: this._scichartTheme,
         });
 	this._scichartOverview = scichartOverview;
@@ -51,6 +52,7 @@ export class OverviewChartComponent {
 	scichartOverview.overviewXAxis.isInnerAxis = true;
 	scichartOverview.overviewXAxis.drawMinorGridLines = false;
 	scichartOverview.overviewXAxis.labelProvider.precision = 0;
+	scichartOverview.overviewXAxis.labelStyle.fontSize = 8;
 
 	// Update the SciChartSurface theme colors
 	this._updateChartThemeColors();
