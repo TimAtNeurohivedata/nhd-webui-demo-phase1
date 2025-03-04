@@ -101,12 +101,13 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 
     private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
 
-    static XyGeneratorOptions(dataGeneratorOptions: ChartOptionsDataGeneratorType): ChartOptionsXyDataSeriesType {
+    static XyGeneratorOptions(optionsDataGenerator: ChartOptionsDataGeneratorType): ChartOptionsXyDataSeriesType {
         // super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
-	let fifoCapacity = dataGeneratorOptions.dataType === "EegFixedData" ? eegFixedData01.length - 1 : dataGeneratorOptions.fifoTotalLength;
-	dataGeneratorOptions.fifoTotalLength = fifoCapacity;
+	const fifoCapacity = optionsDataGenerator.dataType === "EegFixedData" ? eegFixedData01.length - 1 : optionsDataGenerator.fifoTotalLength;
+	optionsDataGenerator.fifoTotalLength = fifoCapacity;
+	const streamData = optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
 	let optionsXyDataSeries: ChartOptionsXyDataSeriesType = {
-	    containsNaN: true, dataEvenlySpaced: true, dataIsSortedInX: true, fifoCapacity: fifoCapacity, fifoSweeping: true, streamData: false, xAxisDensity: 20, yAxisAmplitude: 1
+	    containsNaN: true, dataEvenlySpaced: true, dataIsSortedInX: true, fifoCapacity: fifoCapacity, fifoSweeping: true, streamData: streamData, xAxisDensity: 20, yAxisAmplitude: 1
 	}
 	return optionsXyDataSeries;
     }
@@ -140,7 +141,6 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 
     _createDataGenerator(): void {
 	// Create the data genereator for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
-	const streamData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
 	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.SineWave) {
 	    this._interface = new SineWaveXyDataSeriesInterface(this, this._optionsXyDataSeries, 3.5);
 	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
