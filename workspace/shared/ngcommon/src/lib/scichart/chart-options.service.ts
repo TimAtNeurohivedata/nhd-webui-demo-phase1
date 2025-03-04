@@ -14,8 +14,9 @@ export type ChartOptionsDataGeneratorType = {
     dataType: ChartOptionsDataTypeEnum | string;
     autoUpdateType: ChartOptionsAutoUpdateTypeEnum | string;
     autoUpdateRateMsec: number;
-    autoUpdateSpeed: number;
+    autoUpdateTimescale: number;
     fifoTotalLength: number;
+    fifoTimescale: number;
     xAxisDensity: number;
     yAxisAmplitude: number;
 };
@@ -28,7 +29,7 @@ export type ChartOptionsThemeType = {
 };
 
 export let chartOptionsDefault: ChartOptionsType = {
-    dataGenerator: { dataType: "SineWave", autoUpdateType: "Static", autoUpdateRateMsec: 50, autoUpdateSpeed: 1.0, fifoTotalLength: 2000, xAxisDensity: 20, yAxisAmplitude: 1 },
+    dataGenerator: { dataType: "SineWave", autoUpdateType: "Static", autoUpdateRateMsec: 50, autoUpdateTimescale: 1, fifoTotalLength: 2000, fifoTimescale: 4, xAxisDensity: 20, yAxisAmplitude: 1 },
     graphLines: {},
     theme: { useNativeSciChartTheme: false },
 };
