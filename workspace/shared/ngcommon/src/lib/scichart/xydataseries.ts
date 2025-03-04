@@ -3,21 +3,44 @@ import { makeIncArray, TSciChart, XyDataSeries } from "scichart";
 import { ChartOptionsDataGeneratorType, ChartOptionsDataTypeEnum, ChartOptionsAutoUpdateTypeEnum } from './chart-options.service';
 import { eegFixedData01 } from './eegfixeddata01';
 
+type ChartOptionsXyDataSeriesType = {
+    containsNaN: boolean;
+    dataEvenlySpaced: boolean;
+    dataIsSortedInX: boolean;
+    fifoCapacity: number;
+    fifoSweeping: boolean;
+    streamData: boolean;
+    xAxisDensity: number;
+    yAxisAmplitude: number;
+}
+
 interface ChartXyDataSeriesInterface {
     autoUpdateDataRange(rangeCount: number): void;
+}
+
+abstract class ChartXyDataSeriesInterfaceAbstractClass implements ChartXyDataSeriesInterface {
+    constructor(protected _xyDataSeries: XyDataSeries, protected _optionsXyDataSeries: ChartOptionsXyDataSeriesType, ...args: any[]) {}
+    abstract autoUpdateDataRange(rangeCount: number): void;
 }
 
 abstract class ChartXyDataSeriesAbstractClass extends XyDataSeries implements ChartXyDataSeriesInterface {
     protected _interface!: ChartXyDataSeriesInterface;
 
-    constructor(protected _wasmContext: TSciChart, private _fifoCapacity: number, private _density: number, private _amplitude: number, private _streamData: boolean, ...args: any[]) {
+    constructor(protected _wasmContext: TSciChart, protected _optionsXyDataSeries: ChartOptionsXyDataSeriesType, ...args: any[]) {
         // Create an empty FIFO series
 	// When data reaches _fifoCapacity then old samples will be pushed and new samples appended to the end
-        super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
+        // super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
+        super(_wasmContext, {
+	    containsNaN: _optionsXyDataSeries.containsNaN,
+	    dataIsSortedInX: _optionsXyDataSeries.dataIsSortedInX,
+	    dataEvenlySpacedInX: _optionsXyDataSeries.dataIsSortedInX,
+	    fifoCapacity: _optionsXyDataSeries.fifoCapacity,
+	    fifoSweeping: _optionsXyDataSeries.fifoSweeping
+	});
 
         // Fill with NaN values up to _fifoCapacity
 	// This stops the stretching effect when Fifo series are filled with AutoRange
-	this.appendRange(Array(_fifoCapacity).fill(NaN), Array(_fifoCapacity).fill(NaN));
+	this.appendRange(Array(_optionsXyDataSeries.fifoCapacity).fill(NaN), Array(_optionsXyDataSeries.fifoCapacity).fill(NaN));
     }
 
     autoUpdateDataRange(rangeCount: number): void { return this._interface.autoUpdateDataRange(rangeCount); }
@@ -28,7 +51,7 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 
     private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
     
-    constructor(private _wasmContext: TSciChart, private _arrayLength: number, private _options: ChartOptionsDataGeneratorType, private _autoUpdateData: boolean = true) {
+    constructor(private _wasmContext: TSciChart, private _arrayLength: number, private _optionsDataGenerator: ChartOptionsDataGeneratorType, private _autoUpdateData: boolean = true) {
 	super();
 
 	// Create the data genereators for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
@@ -38,9 +61,9 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	if (_autoUpdateData) {
 	    // Update the data at least one time whether or not the dataGenerator autoUpdateType is Static/Dynamic/Streaming
 	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
-	    const staticData = this._options.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
+	    const staticData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
 	    if (staticData) {
-		this._updateDataNow(this._options.fifoTotalLength);
+		this._updateDataNow(this._optionsDataGenerator.fifoTotalLength);
 	    }
 	    else {
 		this._autoUpdateDataRangeTimer();
@@ -49,15 +72,15 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
     }
 
     _autoUpdateDataRangeTimer(): void {
-	let scaleUpdateRate = this._options.autoUpdateTimescale < 1.0 ? 1.0 / this._options.autoUpdateTimescale : 1.0;
-	let autoUpdateRange = (1000 / this._options.autoUpdateRateMsec) / this._options.xAxisDensity * this._options.autoUpdateTimescale * scaleUpdateRate;
-	this._intervalId = setInterval(() => { this._updateDataNow(autoUpdateRange); }, this._options.autoUpdateRateMsec * scaleUpdateRate);
+	let scaleUpdateRate = this._optionsDataGenerator.autoUpdateTimescale < 1.0 ? 1.0 / this._optionsDataGenerator.autoUpdateTimescale : 1.0;
+	let autoUpdateRange = (1000 / this._optionsDataGenerator.autoUpdateRateMsec) / this._optionsDataGenerator.xAxisDensity * this._optionsDataGenerator.autoUpdateTimescale * scaleUpdateRate;
+	this._intervalId = setInterval(() => { this._updateDataNow(autoUpdateRange); }, this._optionsDataGenerator.autoUpdateRateMsec * scaleUpdateRate);
     }
 
     _createDataGenerators(): void {
 	// Create the data genereators for the ChartXyDataSeries array
 	for (let i = 0; i < this._arrayLength ; i++) {
-	    this[i] = new ChartXyDataSeries(this._wasmContext, this._options, false);
+	    this[i] = new ChartXyDataSeries(this._wasmContext, this._optionsDataGenerator, false);
 	}
     }
 
@@ -78,8 +101,19 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 
     private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
 
-    constructor(_wasmContext: TSciChart, private _options: ChartOptionsDataGeneratorType, autoUpdateData: boolean = true) {
-	super(_wasmContext, _options.fifoTotalLength, _options.xAxisDensity, _options.yAxisAmplitude, true);
+    static XyGeneratorOptions(dataGeneratorOptions: ChartOptionsDataGeneratorType): ChartOptionsXyDataSeriesType {
+        // super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
+	let fifoCapacity = dataGeneratorOptions.dataType === "EegFixedData" ? eegFixedData01.length - 1 : dataGeneratorOptions.fifoTotalLength;
+	dataGeneratorOptions.fifoTotalLength = fifoCapacity;
+	let optionsXyDataSeries: ChartOptionsXyDataSeriesType = {
+	    containsNaN: true, dataEvenlySpaced: true, dataIsSortedInX: true, fifoCapacity: fifoCapacity, fifoSweeping: true, streamData: false, xAxisDensity: 20, yAxisAmplitude: 1
+	}
+	return optionsXyDataSeries;
+    }
+
+    constructor(_wasmContext: TSciChart, private _optionsDataGenerator: ChartOptionsDataGeneratorType, autoUpdateData: boolean = true) {
+	// Use the XyGeneratorOptions to set the ChartOptionsXyDataSeriesType options
+	super(_wasmContext, ChartXyDataSeries.XyGeneratorOptions(_optionsDataGenerator));
 	
 	// Create the data genereator for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
 	this._createDataGenerator();
@@ -88,9 +122,9 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 	if (autoUpdateData) {
 	    // Update the data at least one time whether or not the dataGenerator autoUpdateType is Static/Dynamic/Streaming
 	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
-	    const staticData = this._options.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
+	    const staticData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
 	    if (staticData) {
-		this._updateDataNow(this._options.fifoTotalLength);
+		this._updateDataNow(this._optionsDataGenerator.fifoTotalLength);
 	    }
 	    else {
 		this._autoUpdateDataRangeTimer();
@@ -99,29 +133,29 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
     }
     
     _autoUpdateDataRangeTimer(): void {
-	let scaleUpdateRate = this._options.autoUpdateTimescale < 1.0 ? 1.0 / this._options.autoUpdateTimescale : 1.0;
-	let autoUpdateRange = (1000 / this._options.autoUpdateRateMsec) / this._options.xAxisDensity * this._options.autoUpdateTimescale * scaleUpdateRate;
-	this._intervalId = setInterval(() => { this._updateDataNow(autoUpdateRange); }, this._options.autoUpdateRateMsec * scaleUpdateRate);
+	let scaleUpdateRate = this._optionsDataGenerator.autoUpdateTimescale < 1.0 ? 1.0 / this._optionsDataGenerator.autoUpdateTimescale : 1.0;
+	let autoUpdateRange = (1000 / this._optionsDataGenerator.autoUpdateRateMsec) / this._optionsDataGenerator.xAxisDensity * this._optionsDataGenerator.autoUpdateTimescale * scaleUpdateRate;
+	this._intervalId = setInterval(() => { this._updateDataNow(autoUpdateRange); }, this._optionsDataGenerator.autoUpdateRateMsec * scaleUpdateRate);
     }
 
     _createDataGenerator(): void {
 	// Create the data genereator for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
-	const streamData = this._options.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
-	if (this._options.dataType === ChartOptionsDataTypeEnum.SineWave) {
-	    this._interface = new SineWaveXyDataSeriesInterface(this, this._options.fifoTotalLength, this._options.xAxisDensity, this._options.yAxisAmplitude, streamData, 3.5);
-	    this.autoUpdateDataRange(this._options.fifoTotalLength);
+	const streamData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
+	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.SineWave) {
+	    this._interface = new SineWaveXyDataSeriesInterface(this, this._optionsXyDataSeries, 3.5);
+	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
 	}
-	if (this._options.dataType === ChartOptionsDataTypeEnum.RandomData) {
-	    this._interface = new RandomDataXyDataSeriesInterface(this, this._options.fifoTotalLength, this._options.xAxisDensity, this._options.yAxisAmplitude, streamData);
-	    this.autoUpdateDataRange(this._options.fifoTotalLength);
+	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.RandomData) {
+	    this._interface = new RandomDataXyDataSeriesInterface(this, this._optionsXyDataSeries);
+	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
 	}
-	if (this._options.dataType === ChartOptionsDataTypeEnum.RandomWalk) {
-	    this._interface = new RandomWalkXyDataSeriesInterface(this, this._options.fifoTotalLength, this._options.xAxisDensity, this._options.yAxisAmplitude, streamData);
-	    this.autoUpdateDataRange(this._options.fifoTotalLength);
+	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.RandomWalk) {
+	    this._interface = new RandomWalkXyDataSeriesInterface(this, this._optionsXyDataSeries);
+	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
 	}
-	if (this._options.dataType === ChartOptionsDataTypeEnum.EegFixedData) {
-	    this._interface = new EegFixedDataXyDataSeriesInterface(this, this._options.fifoTotalLength, this._options.xAxisDensity, this._options.yAxisAmplitude, streamData);
-	    this.autoUpdateDataRange(this._options.fifoTotalLength);
+	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.EegFixedData) {
+	    this._interface = new EegFixedDataXyDataSeriesInterface(this, this._optionsXyDataSeries);
+	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
 	}
     }
 
@@ -138,15 +172,15 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 class SineWaveXyDataSeriesInterface implements ChartXyDataSeriesInterface {
     private _totalRangeCount: number = 0;
 
-    constructor (private _xyDataSeries: XyDataSeries, private _fifoCapacity: number, private _density: number, private _amplitude: number, private _streamData: boolean, private _numberWaves: number) {}
+    constructor (private _xyDataSeries: XyDataSeries, private _optionsXyDataSeries: ChartOptionsXyDataSeriesType, private _numberWaves: number) {}
 
     autoUpdateDataRange(rangeCount: number): void {
-	let xAxisOffset = this._streamData ? this._totalRangeCount : this._totalRangeCount % this._fifoCapacity;
+	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
 	this._xyDataSeries.appendRange(
-	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._density),
+	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._optionsXyDataSeries.xAxisDensity),
 	    Array.from(
 		makeIncArray(rangeCount),
-		(x: number) => Math.sin((2 * Math.PI * this._numberWaves) * ((x + this._totalRangeCount) / this._fifoCapacity) * this._amplitude)
+		(x: number) => Math.sin((2 * Math.PI * this._numberWaves) * ((x + this._totalRangeCount) / this._optionsXyDataSeries.fifoCapacity) * this._optionsXyDataSeries.yAxisAmplitude)
 	    )
 	);
 	this._totalRangeCount = this._totalRangeCount + rangeCount;
@@ -154,24 +188,24 @@ class SineWaveXyDataSeriesInterface implements ChartXyDataSeriesInterface {
 }
 
 export class SineWaveXyDataSeries extends ChartXyDataSeriesAbstractClass {
-    constructor(_wasmContext: TSciChart, _fifoCapacity: number, _density: number, _amplitude: number, _streamData: boolean, ...args: any[]) {
-	super(_wasmContext, _fifoCapacity, _density, _amplitude, _streamData, ...args);
-	this._interface = new SineWaveXyDataSeriesInterface(this, _fifoCapacity, _density, _amplitude, _streamData, [...args][0]);
+    constructor(_wasmContext: TSciChart, _optionsXyDataSeries: ChartOptionsXyDataSeriesType, _numberWaves: number) {
+	super(_wasmContext, _optionsXyDataSeries, _numberWaves);
+	this._interface = new SineWaveXyDataSeriesInterface(this, _optionsXyDataSeries, _numberWaves);
     }
 }
 
 class RandomDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
     private _totalRangeCount: number = 0;
 
-    constructor (private _xyDataSeries: XyDataSeries, private _fifoCapacity: number, private _density: number, private _amplitude: number, private _streamData: boolean) {}
+    constructor (private _xyDataSeries: XyDataSeries, private _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {}
 
     autoUpdateDataRange(rangeCount: number): void {
-	let xAxisOffset = this._streamData ? this._totalRangeCount : this._totalRangeCount % this._fifoCapacity;
+	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
 	this._xyDataSeries.appendRange(
-	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._density),
+	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._optionsXyDataSeries.xAxisDensity),
 	    Array.from(
 		makeIncArray(rangeCount),
-		(x: number) => Math.random() - 0.5 * this._amplitude
+		(x: number) => Math.random() - 0.5 * this._optionsXyDataSeries.yAxisAmplitude
 	    )
 	);
 	this._totalRangeCount = this._totalRangeCount + rangeCount;
@@ -179,9 +213,9 @@ class RandomDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
 }
 
 export class RandomDataXyDataSeries extends ChartXyDataSeriesAbstractClass {
-    constructor(_wasmContext: TSciChart, _fifoCapacity: number, _density: number, _amplitude: number, _streamData: boolean) {
-	super(_wasmContext, _fifoCapacity, _density, _amplitude, _streamData);
-	this._interface = new RandomDataXyDataSeriesInterface(this, _fifoCapacity, _density, _amplitude, _streamData);
+    constructor(_wasmContext: TSciChart, _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {
+	super(_wasmContext, _optionsXyDataSeries);
+	this._interface = new RandomDataXyDataSeriesInterface(this, _optionsXyDataSeries);
     }
 }
 
@@ -189,21 +223,21 @@ class RandomWalkXyDataSeriesInterface implements ChartXyDataSeriesInterface {
     private _totalRangeCount: number = 0;
     private _lastRandomWalk: number = 0;
 
-    constructor (private _xyDataSeries: XyDataSeries, private _fifoCapacity: number, private _density: number, private _amplitude: number, private _streamData: boolean) {}
+    constructor (private _xyDataSeries: XyDataSeries, private _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {}
 
     autoUpdateDataRange(rangeCount: number): void {
-	let xAxisOffset = this._streamData ? this._totalRangeCount : this._totalRangeCount % this._fifoCapacity;
+	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
 	this._xyDataSeries.appendRange(
-	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._density),
+	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._optionsXyDataSeries.xAxisDensity),
 	    Array.from(
 		makeIncArray(rangeCount),
 		(x: number) => {
-		    if (this._lastRandomWalk > 0.8 * this._amplitude) {
+		    if (this._lastRandomWalk > 0.8 * this._optionsXyDataSeries.yAxisAmplitude) {
 			const random = (Math.random() - 0.7);
 			const step = random > 0 ? random * 0.01 : random * 0.04;
 			this._lastRandomWalk = this._lastRandomWalk + step;
 		    }
-		    else if (this._lastRandomWalk < 0.8 * -this._amplitude) {
+		    else if (this._lastRandomWalk < 0.8 * -this._optionsXyDataSeries.yAxisAmplitude) {
 			const random = (Math.random() - 0.3);
 			const step = random < 0 ? random * 0.01 : random * 0.04;
 			this._lastRandomWalk = this._lastRandomWalk + step;
@@ -220,13 +254,13 @@ class RandomWalkXyDataSeriesInterface implements ChartXyDataSeriesInterface {
 }
 
 export class RandomWalkXyDataSeries extends ChartXyDataSeriesAbstractClass {
-    constructor(_wasmContext: TSciChart, _fifoCapacity: number, _density: number, _amplitude: number, _streamData: boolean) {
-	super(_wasmContext, _fifoCapacity, _density, _amplitude, _streamData);
-	this._interface = new RandomWalkXyDataSeriesInterface(this, _fifoCapacity, _density, _amplitude, _streamData);
+    constructor(_wasmContext: TSciChart, _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {
+	super(_wasmContext, _optionsXyDataSeries);
+	this._interface = new RandomWalkXyDataSeriesInterface(this, _optionsXyDataSeries);
     }
 }
 
-class EegFixedDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
+class EegFixedDataXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstractClass {
     private _eegFixedDataMaxX: number = -1000;
     private _eegFixedDataMinY: number = 1000;
     private _eegFixedDataMaxY: number = 0;
@@ -236,7 +270,8 @@ class EegFixedDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
     private _scaleYAxis: number = 1.0
     private _totalRangeCount: number = 0;
 
-    constructor (private _xyDataSeries: XyDataSeries, private _fifoCapacity: number, private _density: number, private _amplitude: number, private _streamData: boolean) {
+    constructor (_xyDataSeries: XyDataSeries, _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {
+	super(_xyDataSeries, _optionsXyDataSeries);
 	for (let i = 0; i < eegFixedData01.length ; i++) {
 	    if (eegFixedData01[i][0] > this._eegFixedDataMaxX) { this._eegFixedDataMaxX = eegFixedData01[i][0]; }
 	    if (eegFixedData01[i][1] > this._eegFixedDataMaxY) { this._eegFixedDataMaxY = eegFixedData01[i][1]; }
@@ -244,11 +279,11 @@ class EegFixedDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
 	    this._eegFixedDataOffsetY = -this._eegFixedDataMinY - (this._eegFixedDataMaxY - this._eegFixedDataMinY) / 2;
 	}
 	this._scaleXAxis = 100.0 / this._eegFixedDataMaxX;
-	this._scaleYAxis = this._amplitude / -75.0;
+	this._scaleYAxis = this._optionsXyDataSeries.yAxisAmplitude / -75.0;
     }
 
     autoUpdateDataRange(rangeCount: number): void {
-	let xAxisOffset = this._streamData ? this._totalRangeCount : this._totalRangeCount % this._fifoCapacity;
+	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
 	if (xAxisOffset + rangeCount >= eegFixedData01.length) {
 	    xAxisOffset = 0;
 	    this._eegFixedDataOffsetX = this._eegFixedDataOffsetX + eegFixedData01[this._totalRangeCount][0];
@@ -263,8 +298,8 @@ class EegFixedDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
 }
 
 export class EegFixedDataXyDataSeries extends ChartXyDataSeriesAbstractClass {
-    constructor(_wasmContext: TSciChart, _fifoCapacity: number, _density: number, _amplitude: number, _streamData: boolean) {
-	super(_wasmContext, _fifoCapacity, _density, _amplitude, _streamData);
-	this._interface = new EegFixedDataXyDataSeriesInterface(this, _fifoCapacity, _density, _amplitude, _streamData);
+    constructor(_wasmContext: TSciChart, _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {
+	super(_wasmContext, _optionsXyDataSeries);
+	this._interface = new EegFixedDataXyDataSeriesInterface(this, _optionsXyDataSeries);
     }
 }
