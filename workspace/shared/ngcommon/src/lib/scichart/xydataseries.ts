@@ -56,16 +56,18 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 
 	// Create the data genereators for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
 	this._createDataGenerators();
-	
+
 	// Automatically update the data with the data generator if the autoUpdateData flag is true
 	if (_autoUpdateData) {
 	    // Update the data at least one time whether or not the dataGenerator autoUpdateType is Static/Dynamic/Streaming
-	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
-	    const staticData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
-	    if (staticData) {
+	    // Auto update data for the entire XyDataSeries FIFO for all data types so that the initial lines fill the entire graph
+	    for (let i = 0 ; i < this._optionsDataGenerator.fifoTimescale ; i++) {
 		this._updateDataNow(this._optionsDataGenerator.fifoTotalLength);
 	    }
-	    else {
+
+	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
+	    const staticData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
+	    if (!staticData) {
 		this._autoUpdateDataRangeTimer();
 	    }
 	}
@@ -103,8 +105,9 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 
     static XyGeneratorOptions(optionsDataGenerator: ChartOptionsDataGeneratorType): ChartOptionsXyDataSeriesType {
         // super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
-	const fifoCapacity = optionsDataGenerator.dataType === "EegFixedData" ? eegFixedData01.length - 1 : optionsDataGenerator.fifoTotalLength;
+	let fifoCapacity = optionsDataGenerator.dataType === "EegFixedData" ? eegFixedData01.length - 1 : optionsDataGenerator.fifoTotalLength;
 	optionsDataGenerator.fifoTotalLength = fifoCapacity;
+	fifoCapacity = fifoCapacity * optionsDataGenerator.fifoTimescale;
 	const streamData = optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
 	let optionsXyDataSeries: ChartOptionsXyDataSeriesType = {
 	    containsNaN: true, dataEvenlySpaced: true, dataIsSortedInX: true, fifoCapacity: fifoCapacity, fifoSweeping: true, streamData: streamData, xAxisDensity: 20, yAxisAmplitude: 1
@@ -118,16 +121,18 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 	
 	// Create the data genereator for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
 	this._createDataGenerator();
-	
+
 	// Automatically update the data with the data generator if the autoUpdateData flag is true
 	if (autoUpdateData) {
 	    // Update the data at least one time whether or not the dataGenerator autoUpdateType is Static/Dynamic/Streaming
-	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
-	    const staticData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
-	    if (staticData) {
+	    // Auto update data for the entire XyDataSeries FIFO for all data types so that the initial lines fill the entire graph
+	    for (let i = 0 ; i < this._optionsDataGenerator.fifoTimescale ; i++) {
 		this._updateDataNow(this._optionsDataGenerator.fifoTotalLength);
 	    }
-	    else {
+
+	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
+	    const staticData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
+	    if (!staticData) {
 		this._autoUpdateDataRangeTimer();
 	    }
 	}
@@ -143,19 +148,15 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 	// Create the data genereator for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
 	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.SineWave) {
 	    this._interface = new SineWaveXyDataSeriesInterface(this, this._optionsXyDataSeries, 3.5);
-	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
 	}
 	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.RandomData) {
 	    this._interface = new RandomDataXyDataSeriesInterface(this, this._optionsXyDataSeries);
-	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
 	}
 	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.RandomWalk) {
 	    this._interface = new RandomWalkXyDataSeriesInterface(this, this._optionsXyDataSeries);
-	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
 	}
 	if (this._optionsDataGenerator.dataType === ChartOptionsDataTypeEnum.EegFixedData) {
 	    this._interface = new EegFixedDataXyDataSeriesInterface(this, this._optionsXyDataSeries);
-	    this.autoUpdateDataRange(this._optionsDataGenerator.fifoTotalLength);
 	}
     }
 
