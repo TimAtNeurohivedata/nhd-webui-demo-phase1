@@ -291,6 +291,10 @@ class NumericLabelProviderFixed extends DateLabelProvider {
         const start = axisRange.min;
         const end = axisRange.max;
 	let numericValue = Math.ceil((dataValue - start) / 10) * 10;
+	const roundedNum = Math.round(dataValue - start);
+	if (Math.abs(dataValue - start - roundedNum) < 0.1) {
+	    numericValue = roundedNum;
+	}
 	let numericString = numericValue.toFixed(1);
 	// console.log("min/max/diff/dataValue/numericValue: ", start, end, end - start, dataValue, numericValue);
 	return numericString;
