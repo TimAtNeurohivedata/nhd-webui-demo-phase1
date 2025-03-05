@@ -105,7 +105,8 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
     }
 
     _updateDataNow(rangeCount: number): void {
-	if (this[0].xyDataSeries === undefined) {
+	let xyDataSeries = this[0];
+	if (xyDataSeries === undefined || xyDataSeries.getNativeXValues() === undefined) {
 	    clearInterval(this._intervalId);
 	    this._intervalId = undefined;
 	    return;
