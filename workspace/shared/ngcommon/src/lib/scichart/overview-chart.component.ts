@@ -6,6 +6,7 @@ import { ScichartAngularComponent } from "scichart-angular";
 import { SciChartJsNavyTheme } from 'scichart';
 import { SciChartOverview, SciChartSurface, TSciChart } from 'scichart';
 import { NumberRange } from 'scichart';
+import { ECoordinateMode, VerticalLineAnnotation } from 'scichart';
 
 import { ChartOptionsService } from './chart-options.service';
 import { ChartThemeService } from './chart-theme.service';
@@ -45,6 +46,7 @@ export class OverviewChartComponent {
 	    padding: { top: 0, bottom: 0, left: 10, right: 10 },
             theme: this._scichartTheme,
         });
+	scichartOverview.overviewSciChartSurface.padding = { top: 0, bottom: 0, left: 52, right: 10 };
 	this._scichartOverview = scichartOverview;
 	this._scichartRootElement = rootElement;
 
@@ -61,6 +63,9 @@ export class OverviewChartComponent {
 	    if (area !== undefined) { globalChartXyDataSeriesArray.visibleRange = area };
 	});
 
+	// Create annotations for the graph
+	this._createXyAnnotationsFromChartOptions();
+
 	// Update the SciChartSurface theme colors
 	this._updateChartThemeColors();
 
@@ -72,6 +77,20 @@ export class OverviewChartComponent {
 	}
 
 	return { sciChartSurface: scichartOverview.overviewSciChartSurface };
+    }
+
+    private _createXyAnnotationsFromChartOptions() {
+	let annotations = globalChartXyDataSeriesArray.annotations;
+	console.log("annotations: ", annotations);
+	for (let i = 0 ; i < this._scichartOverview.overviewSciChartSurface.annotations.size() ; i++) {
+	    const verticalLineAnnotation = this._scichartOverview.overviewSciChartSurface.annotations.get(i);
+	    this._scichartOverview.overviewSciChartSurface.annotations.remove(verticalLineAnnotation);
+	}
+	for (let i = 0 ; i < annotations.length ; i++) {
+	    const verticalLineAnnotation = new VerticalLineAnnotation( { x1: annotations[i].x, y1: annotations[i].y, stroke: "#FF0000"});
+	    verticalLineAnnotation.xCoordinateMode = ECoordinateMode.DataValue;
+	    this._scichartOverview.overviewSciChartSurface.annotations.add(verticalLineAnnotation);
+	}
     }
 
     private _updateChartThemeColors() {

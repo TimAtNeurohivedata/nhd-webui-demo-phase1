@@ -14,12 +14,19 @@ type ChartOptionsXyDataSeriesType = {
     yAxisAmplitude: number;
 }
 
+type ChartXyDataSeriesAnnotationType = {
+    x: number;
+    y: number;
+}
+
 interface ChartXyDataSeriesInterface {
+    get annotations(): ChartXyDataSeriesAnnotationType[];
     autoUpdateDataRange(rangeCount: number): void;
 }
 
 abstract class ChartXyDataSeriesInterfaceAbstractClass implements ChartXyDataSeriesInterface {
     constructor(protected _xyDataSeries: XyDataSeries, protected _optionsXyDataSeries: ChartOptionsXyDataSeriesType, ...args: any[]) {}
+    get annotations(): ChartXyDataSeriesAnnotationType[] { return []; }
     abstract autoUpdateDataRange(rangeCount: number): void;
 }
 
@@ -42,6 +49,8 @@ abstract class ChartXyDataSeriesAbstractClass extends XyDataSeries implements Ch
 	// This stops the stretching effect when Fifo series are filled with AutoRange
 	this.appendRange(Array(_optionsXyDataSeries.fifoCapacity).fill(NaN), Array(_optionsXyDataSeries.fifoCapacity).fill(NaN));
     }
+
+    get annotations(): ChartXyDataSeriesAnnotationType[] { return this._interface.annotations; }
 
     autoUpdateDataRange(rangeCount: number): void { return this._interface.autoUpdateDataRange(rangeCount); }
 }
@@ -76,6 +85,15 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	    if (!staticData) {
 		this._autoUpdateDataRangeTimer();
 	    }
+	}
+    }
+
+    get annotations(): ChartXyDataSeriesAnnotationType[] {
+	if (this.length > 0) {
+	    return this[0].annotations;
+	}
+	else {
+	    return [];
 	}
     }
 
@@ -219,6 +237,8 @@ class SineWaveXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstractCl
 	super(_xyDataSeries, _optionsXyDataSeries);
     }
 
+    override get annotations(): ChartXyDataSeriesAnnotationType[] { return [{x: 2 * Math.PI * this._numberWaves, y: 15}]; }
+
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
 	this._xyDataSeries.appendRange(
@@ -330,6 +350,8 @@ class EegFixedDataXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstra
 	this._scaleXAxis = 100.0 / this._eegFixedDataMaxX;
 	this._scaleYAxis = this._optionsXyDataSeries.yAxisAmplitude / -75.0;
     }
+
+    override get annotations(): ChartXyDataSeriesAnnotationType[] { return [{x: 44.5, y: 15}]; }
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;

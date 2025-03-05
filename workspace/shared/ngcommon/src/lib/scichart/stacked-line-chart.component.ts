@@ -7,6 +7,7 @@ import { SciChartSurface, TSciChart } from 'scichart';
 import { EAxisAlignment, EAutoRange, FastLineRenderableSeries, NumericAxis, NumberRange } from 'scichart';
 import { LeftAlignedOuterVerticallyStackedAxisLayoutStrategy, Thickness } from 'scichart';
 import { DateLabelProvider, DateTimeNumericAxis, NumericLabelProvider, NumericTickProvider, TFormatLabelFn } from 'scichart';
+import { ECoordinateMode, VerticalLineAnnotation } from 'scichart';
 
 import { ChartOptionsService } from './chart-options.service';
 import { ChartThemeService } from './chart-theme.service';
@@ -32,6 +33,7 @@ export class StackedLineChartComponent {
     private _scichartTheme: SciChartJsNavyTheme = new SciChartJsNavyTheme();
     private _scichartWasmContext!: TSciChart;
     private _themeSubscription!: Subscription;
+    private _xyDataSeriesArray!: ChartXyDataSeriesArray;
 
     constructor(private _optionsService: ChartOptionsService, private _themeService: ChartThemeService) {
 	this.initStackedLineChart = (rootElement: string | HTMLDivElement) => { return this._initStackedLineChart(rootElement); }
@@ -62,6 +64,19 @@ export class StackedLineChartComponent {
 	return { sciChartSurface, wasmContext };
     }
 
+    private _createXyAnnotationsFromChartOptions() {
+	let annotations = this._xyDataSeriesArray.annotations;
+	for (let i = 0 ; i < this._scichartSurface.annotations.size() ; i++) {
+	    const verticalLineAnnotation = this._scichartSurface.annotations.get(i);
+	    this._scichartSurface.annotations.remove(verticalLineAnnotation);
+	}
+	for (let i = 0 ; i < annotations.length ; i++) {
+	    const verticalLineAnnotation = new VerticalLineAnnotation( { x1: annotations[i].x, y1: annotations[i].y, yAxisId: "Y0", stroke: "#FF0000"});
+	    verticalLineAnnotation.xCoordinateMode = ECoordinateMode.DataValue;
+	    this._scichartSurface.annotations.add(verticalLineAnnotation);
+	}
+    }
+
     private _createXyDataSeriesFromChartOptions() {
 	let xyDataSeriesArray = new ChartXyDataSeriesArray(this._scichartWasmContext, this.stackedLineCount, this._optionsService.chartOptions.dataGenerator, true);
 	for (let i = 0; i < this.stackedLineCount; i++) {
@@ -76,6 +91,7 @@ export class StackedLineChartComponent {
 	xyDataSeriesArray.autoUpdateCallback = ((visibleRange: NumberRange) => {
 	    this._scichartSurface.xAxes.get(0).visibleRange = visibleRange;
 	});
+	this._xyDataSeriesArray = xyDataSeriesArray;
     }
 
     private _createChartXAxes() {
@@ -158,6 +174,9 @@ export class StackedLineChartComponent {
 
 	// Create data for the graph
 	this._createXyDataSeriesFromChartOptions();
+
+	// Create annotations for the graph
+	this._createXyAnnotationsFromChartOptions();
 
 	// Update the SciChartSurface theme colors
 	this._updateChartThemeColors();
