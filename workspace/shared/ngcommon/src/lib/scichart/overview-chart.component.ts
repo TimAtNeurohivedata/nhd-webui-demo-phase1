@@ -5,9 +5,11 @@ import { Component, Input } from '@angular/core';
 import { ScichartAngularComponent } from "scichart-angular";
 import { SciChartJsNavyTheme } from 'scichart';
 import { SciChartOverview, SciChartSurface, TSciChart } from 'scichart';
+import { NumberRange } from 'scichart';
 
 import { ChartOptionsService } from './chart-options.service';
 import { ChartThemeService } from './chart-theme.service';
+import { globalChartXyDataSeriesArray } from './xydataseries';
 
 @Component({
     selector: 'nhd-ngcommon-scichart-overview-chart',
@@ -53,6 +55,11 @@ export class OverviewChartComponent {
 	scichartOverview.overviewXAxis.drawMinorGridLines = false;
 	scichartOverview.overviewXAxis.labelProvider.precision = 0;
 	scichartOverview.overviewXAxis.labelStyle.fontSize = 8;
+	scichartOverview.rangeSelectionModifier.onSelectedAreaChanged = ((area?: NumberRange) => {
+	    // console.log("scichartOverview.rangeSelectionModifier.onSelectedAreaChanged area: ", area);
+	    // console.log("scichartSurface.xAxes.get(0).visibleRange: ", scichartSurface.xAxes.get(0).visibleRange);
+	    if (area !== undefined) { globalChartXyDataSeriesArray.visibleRange = area };
+	});
 
 	// Update the SciChartSurface theme colors
 	this._updateChartThemeColors();

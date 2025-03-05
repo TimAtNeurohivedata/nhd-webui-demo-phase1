@@ -73,21 +73,26 @@ export class StackedLineChartComponent {
             lineSeries.dataSeries = xyDataSeriesArray[i];
             this._scichartSurface.renderableSeries.add(lineSeries);
 	}
+	xyDataSeriesArray.autoUpdateCallback = ((visibleRange: NumberRange) => {
+	    this._scichartSurface.xAxes.get(0).visibleRange = visibleRange;
+	});
     }
 
     private _createChartXAxes() {
 	// Create the first x-axis which has static time numbers that are not updated
 	// Create the first x-axis with Grey color
 	const xAxis1 = new NumericAxis(this._scichartWasmContext, {
-	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Always : EAutoRange.Once,
+	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Never : EAutoRange.Never,
 	    axisBorder: { borderTop: 1, color: "#EEEEEE" },
 	    axisTitleStyle: { fontSize: 16, color: "#EEEEEE" },
 	    axisTitle: "Timeline",
 	    backgroundColor: "#EEEEEE11",
+	    clipToXRange: false,
 	    drawMinorGridLines: false,
 	    drawMajorGridLines: false,
 	    labelProvider: new NumericLabelProviderFixed(),
 	    labelStyle:  { fontSize: 8, color: "#EEEEEE" },
+	    visibleRange: new NumberRange(0, 100),
 	});
 	xAxis1.tickProvider = new NumericTickProviderFullWidth(this._scichartWasmContext, 10);
 	this._scichartSurface.xAxes.add(xAxis1);
@@ -98,11 +103,12 @@ export class StackedLineChartComponent {
 	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Always : EAutoRange.Once,
 	    axisTitleStyle: { color: "#EEEEEE" },
 	    backgroundColor: "#EEEEEE11",
+	    clipToXRange: true,
 	    drawMinorGridLines: false,
 	    drawMajorGridLines: false,
 	    labelProvider: new DynamicDateLabelProvider(),
             maxAutoTicks: 2,
-	    clipToXRange: true,
+	    visibleRange: new NumberRange(0, 100),
 	});
 	xAxis2.labelStyle.padding = new Thickness(0, 75, 0, 0);
 	xAxis2.tickProvider = new NumericTickProviderFullWidth(this._scichartWasmContext, 1);

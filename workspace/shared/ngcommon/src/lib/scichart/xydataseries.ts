@@ -1,4 +1,4 @@
-import { makeIncArray, TSciChart, XyDataSeries } from "scichart";
+import { makeIncArray, NumberRange, TSciChart, XyDataSeries } from "scichart";
 
 import { ChartOptionsDataGeneratorType, ChartOptionsDataTypeEnum, ChartOptionsAutoUpdateTypeEnum } from './chart-options.service';
 import { eegFixedData01 } from './eegfixeddata01';
@@ -46,13 +46,19 @@ abstract class ChartXyDataSeriesAbstractClass extends XyDataSeries implements Ch
     autoUpdateDataRange(rangeCount: number): void { return this._interface.autoUpdateDataRange(rangeCount); }
 }
 
+export let globalChartXyDataSeriesArray!: ChartXyDataSeriesArray;
+
 export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
     dataSeries: ChartXyDataSeries[] = [];
 
+    private _autoUpdateCallback!: (visibleRange: NumberRange) => void;
     private _intervalId: ReturnType<typeof setInterval> | undefined = undefined;
-    
+    protected _visibleRange: NumberRange = new NumberRange(0, 0);
+    protected _visibleRangeOffsetIndex: { min: number, max: number } | undefined = undefined;
+
     constructor(private _wasmContext: TSciChart, private _arrayLength: number, private _optionsDataGenerator: ChartOptionsDataGeneratorType, private _autoUpdateData: boolean = true) {
 	super();
+	globalChartXyDataSeriesArray = this;
 
 	// Create the data genereators for the XyDataSeries that matches the Chart Options dataGenerator dataType setting
 	this._createDataGenerators();
@@ -71,6 +77,18 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 		this._autoUpdateDataRangeTimer();
 	    }
 	}
+    }
+
+    get visibleRange(): NumberRange { return this._visibleRange; }
+
+    set visibleRange(visibleRange: NumberRange) {
+	let xyDataSeries = this[0];
+	this._visibleRange = visibleRange;
+	this._visibleRangeOffsetIndex = { min: xyDataSeries.findIndex(visibleRange.min), max: xyDataSeries.findIndex(visibleRange.max) };
+    }
+
+    set autoUpdateCallback(autoUpdateCallback: (visibleRange: NumberRange) => void) {
+	this._autoUpdateCallback = autoUpdateCallback;
     }
 
     _autoUpdateDataRangeTimer(): void {
@@ -94,6 +112,29 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	}
 	for (let i = 0 ; i < this._arrayLength ; i++) {
 	    this[i].autoUpdateDataRange(rangeCount);	    
+	}
+	this._updateVisibleRange();
+	if (this._autoUpdateCallback !== undefined) {
+	    this._autoUpdateCallback(this._visibleRange);
+	}
+    }
+
+    _updateVisibleRange(): void {
+	// Check to see if the Visible Range was changed from the overview panel
+	// If the _visibleRangeOffsetIndex is set then use it to determine where the next visibleRange should be set, this happens when the overview panel is updated
+	if (this._visibleRangeOffsetIndex !== undefined) {
+	    let xyDataSeries = this[0];
+	    if (xyDataSeries.getNativeXValues() === undefined) { console.log("xyDataSeries.getNativeXValues: ", xyDataSeries.getNativeXValues); return; }
+	    let fifoTimescaleTailStartIndex = xyDataSeries.getNativeXValues().get(this._visibleRangeOffsetIndex.min);
+	    let fifoTimescaleTailEndIndex = xyDataSeries.getNativeXValues().get(this._visibleRangeOffsetIndex.max);
+	    this._visibleRange = new NumberRange(fifoTimescaleTailStartIndex, fifoTimescaleTailEndIndex);
+	}
+	// Update the visibleRange of the first xAxis to match the FifoTimescale to visualize a single timescale
+	else {
+	    let xyDataSeries = this[0];
+	    let fifoTimescaleTailStartIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() / this._optionsDataGenerator.fifoTimescale);
+	    let fifoTimescaleTailEndIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() - 1);
+	    this._visibleRange = new NumberRange(fifoTimescaleTailStartIndex, fifoTimescaleTailEndIndex);
 	}
     }
 }
