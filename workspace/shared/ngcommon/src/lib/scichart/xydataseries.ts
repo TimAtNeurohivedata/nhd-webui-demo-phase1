@@ -106,6 +106,9 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	let xyDataSeries = this[0];
 	this._visibleRange = visibleRange;
 	this._visibleRangeOffsetIndex = { min: xyDataSeries.findIndex(visibleRange.min), max: xyDataSeries.findIndex(visibleRange.max) };
+	if (this._autoUpdateCallback !== undefined) {
+	    this._autoUpdateCallback(this._visibleRange);
+	}
     }
 
     set autoUpdateCallback(autoUpdateCallback: (visibleRange: NumberRange) => void) {
