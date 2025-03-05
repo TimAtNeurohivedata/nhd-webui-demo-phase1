@@ -7,7 +7,8 @@ type ChartOptionsXyDataSeriesType = {
     containsNaN: boolean;
     dataEvenlySpaced: boolean;
     dataIsSortedInX: boolean;
-    fifoCapacity: number;
+    fifoTimescaleCapacity: number;
+    fifoTotalCapacity: number;
     fifoSweeping: boolean;
     streamData: boolean;
     xAxisDensity: number;
@@ -35,22 +36,24 @@ abstract class ChartXyDataSeriesAbstractClass extends XyDataSeries implements Ch
 
     constructor(protected _wasmContext: TSciChart, protected _optionsXyDataSeries: ChartOptionsXyDataSeriesType, ...args: any[]) {
         // Create an empty FIFO series
-	// When data reaches _fifoCapacity then old samples will be pushed and new samples appended to the end
+	// When data reaches fifoTotalCapacity then old samples will be pushed and new samples appended to the end
         // super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
         super(_wasmContext, {
 	    containsNaN: _optionsXyDataSeries.containsNaN,
 	    dataIsSortedInX: _optionsXyDataSeries.dataIsSortedInX,
 	    dataEvenlySpacedInX: _optionsXyDataSeries.dataIsSortedInX,
-	    fifoCapacity: _optionsXyDataSeries.fifoCapacity,
+	    fifoCapacity: _optionsXyDataSeries.fifoTotalCapacity,
 	    fifoSweeping: _optionsXyDataSeries.fifoSweeping
 	});
 
-        // Fill with NaN values up to _fifoCapacity
+        // Fill with NaN values up to fifoTotalCapacity
 	// This stops the stretching effect when Fifo series are filled with AutoRange
-	this.appendRange(Array(_optionsXyDataSeries.fifoCapacity).fill(NaN), Array(_optionsXyDataSeries.fifoCapacity).fill(NaN));
+	this.appendRange(Array(_optionsXyDataSeries.fifoTotalCapacity).fill(NaN), Array(_optionsXyDataSeries.fifoTotalCapacity).fill(NaN));
     }
 
     get annotations(): ChartXyDataSeriesAnnotationType[] { return this._interface.annotations; }
+
+    get optionsXyDataSeries(): ChartOptionsXyDataSeriesType { return this._optionsXyDataSeries; }
 
     autoUpdateDataRange(rangeCount: number): void { return this._interface.autoUpdateDataRange(rangeCount); }
 }
@@ -77,7 +80,7 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	    // Update the data at least one time whether or not the dataGenerator autoUpdateType is Static/Dynamic/Streaming
 	    // Auto update data for the entire XyDataSeries FIFO for all data types so that the initial lines fill the entire graph
 	    for (let i = 0 ; i < this._optionsDataGenerator.fifoTimescale ; i++) {
-		this._updateDataNow(this._optionsDataGenerator.fifoTotalLength);
+		this._updateDataNow(this[i].optionsXyDataSeries.fifoTimescaleCapacity);
 	    }
 
 	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
@@ -165,12 +168,19 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 
     static XyGeneratorOptions(optionsDataGenerator: ChartOptionsDataGeneratorType): ChartOptionsXyDataSeriesType {
         // super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
-	let fifoCapacity = optionsDataGenerator.dataType === "EegFixedData" ? eegFixedData01.length - 1 : optionsDataGenerator.fifoTotalLength;
-	optionsDataGenerator.fifoTotalLength = fifoCapacity;
-	fifoCapacity = fifoCapacity * optionsDataGenerator.fifoTimescale;
+	const fifoTimescaleCapacity = optionsDataGenerator.dataType === "EegFixedData" ? eegFixedData01.length - 1 : optionsDataGenerator.fifoTotalLength;
+	const fifoTotalCapacity = fifoTimescaleCapacity * optionsDataGenerator.fifoTimescale;
 	const streamData = optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
 	let optionsXyDataSeries: ChartOptionsXyDataSeriesType = {
-	    containsNaN: true, dataEvenlySpaced: true, dataIsSortedInX: true, fifoCapacity: fifoCapacity, fifoSweeping: true, streamData: streamData, xAxisDensity: 20, yAxisAmplitude: 1
+	    containsNaN: true,
+	    dataEvenlySpaced: true,
+	    dataIsSortedInX: true,
+	    fifoTimescaleCapacity: fifoTimescaleCapacity,
+	    fifoTotalCapacity: fifoTotalCapacity,
+	    fifoSweeping: true,
+	    streamData: streamData,
+	    xAxisDensity: 20,
+	    yAxisAmplitude: 1
 	}
 	return optionsXyDataSeries;
     }
@@ -187,7 +197,7 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 	    // Update the data at least one time whether or not the dataGenerator autoUpdateType is Static/Dynamic/Streaming
 	    // Auto update data for the entire XyDataSeries FIFO for all data types so that the initial lines fill the entire graph
 	    for (let i = 0 ; i < this._optionsDataGenerator.fifoTimescale ; i++) {
-		this._updateDataNow(this._optionsDataGenerator.fifoTotalLength);
+		this._updateDataNow(this._optionsXyDataSeries.fifoTimescaleCapacity);
 	    }
 
 	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
@@ -240,12 +250,12 @@ class SineWaveXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstractCl
     override get annotations(): ChartXyDataSeriesAnnotationType[] { return [{x: 2 * Math.PI * this._numberWaves, y: 15}]; }
 
     autoUpdateDataRange(rangeCount: number): void {
-	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
+	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoTotalCapacity;
 	this._xyDataSeries.appendRange(
 	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._optionsXyDataSeries.xAxisDensity),
 	    Array.from(
 		makeIncArray(rangeCount),
-		(x: number) => Math.sin((2 * Math.PI * this._numberWaves) * ((x + this._totalRangeCount) / this._optionsXyDataSeries.fifoCapacity) * this._optionsXyDataSeries.yAxisAmplitude)
+		(x: number) => Math.sin((2 * Math.PI * this._numberWaves) * ((x + this._totalRangeCount) / this._optionsXyDataSeries.fifoTotalCapacity) * this._optionsXyDataSeries.yAxisAmplitude)
 	    )
 	);
 	this._totalRangeCount = this._totalRangeCount + rangeCount;
@@ -267,7 +277,7 @@ class RandomDataXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstract
     }
 
     autoUpdateDataRange(rangeCount: number): void {
-	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
+	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoTotalCapacity;
 	this._xyDataSeries.appendRange(
 	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._optionsXyDataSeries.xAxisDensity),
 	    Array.from(
@@ -295,7 +305,7 @@ class RandomWalkXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstract
     }
 
     autoUpdateDataRange(rangeCount: number): void {
-	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
+	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoTotalCapacity;
 	this._xyDataSeries.appendRange(
 	    Array.from(makeIncArray(rangeCount), (x: number) => (x + xAxisOffset) / this._optionsXyDataSeries.xAxisDensity),
 	    Array.from(
@@ -354,7 +364,7 @@ class EegFixedDataXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstra
     override get annotations(): ChartXyDataSeriesAnnotationType[] { return [{x: 44.5, y: 15}]; }
 
     autoUpdateDataRange(rangeCount: number): void {
-	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
+	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoTotalCapacity;
 	if (xAxisOffset + rangeCount >= eegFixedData01.length) {
 	    xAxisOffset = 0;
 	    this._eegFixedDataOffsetX = this._eegFixedDataOffsetX + eegFixedData01[this._totalRangeCount][0];
