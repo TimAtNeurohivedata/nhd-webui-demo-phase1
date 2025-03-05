@@ -250,7 +250,7 @@ class SineWaveXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstractCl
 	super(_xyDataSeries, _optionsXyDataSeries);
     }
 
-    override get annotations(): ChartXyDataSeriesAnnotationType[] { return [{x: 2 * Math.PI * this._numberWaves, y: 15}]; }
+    override get annotations(): ChartXyDataSeriesAnnotationType[] { return [{x: 100.0 / 3.5, y: 15}, {x: 100.0 / 3.5 * 2, y: 15}, {x: 100.0 / 3.5 * 3, y: 15}]; }
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoTotalCapacity;

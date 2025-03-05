@@ -90,6 +90,7 @@ export class StackedLineChartComponent {
 	}
 	xyDataSeriesArray.autoUpdateCallback = ((visibleRange: NumberRange) => {
 	    this._scichartSurface.xAxes.get(0).visibleRange = visibleRange;
+	    this._scichartSurface.xAxes.get(1).visibleRange = visibleRange;
 	});
 	this._xyDataSeriesArray = xyDataSeriesArray;
     }
