@@ -296,9 +296,9 @@ class NumericLabelProviderFixed extends DateLabelProvider {
 	const axisRange = this.parentAxis.visibleRange;
         const start = axisRange.min;
         const end = axisRange.max;
-	let numericValue = Math.ceil((dataValue - start) / 10) * 10;
-	const roundedNum = Math.round(dataValue - start);
-	if (Math.abs(dataValue - start - roundedNum) < 0.1) {
+	let numericValue = dataValue - start;
+	const roundedNum = Math.round(numericValue);
+	if (Math.abs(numericValue - roundedNum) < 0.1) {
 	    numericValue = roundedNum;
 	}
 	let numericString = numericValue.toFixed(1);
