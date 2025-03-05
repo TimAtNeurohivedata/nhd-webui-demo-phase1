@@ -212,10 +212,12 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
     }
 }
 
-class SineWaveXyDataSeriesInterface implements ChartXyDataSeriesInterface {
+class SineWaveXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstractClass {
     private _totalRangeCount: number = 0;
 
-    constructor (private _xyDataSeries: XyDataSeries, private _optionsXyDataSeries: ChartOptionsXyDataSeriesType, private _numberWaves: number) {}
+    constructor (_xyDataSeries: XyDataSeries, _optionsXyDataSeries: ChartOptionsXyDataSeriesType, private _numberWaves: number) {
+	super(_xyDataSeries, _optionsXyDataSeries);
+    }
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
@@ -237,10 +239,12 @@ export class SineWaveXyDataSeries extends ChartXyDataSeriesAbstractClass {
     }
 }
 
-class RandomDataXyDataSeriesInterface implements ChartXyDataSeriesInterface {
+class RandomDataXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstractClass {
     private _totalRangeCount: number = 0;
 
-    constructor (private _xyDataSeries: XyDataSeries, private _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {}
+    constructor (_xyDataSeries: XyDataSeries, _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {
+	super(_xyDataSeries, _optionsXyDataSeries);
+    }
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
@@ -262,11 +266,13 @@ export class RandomDataXyDataSeries extends ChartXyDataSeriesAbstractClass {
     }
 }
 
-class RandomWalkXyDataSeriesInterface implements ChartXyDataSeriesInterface {
+class RandomWalkXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstractClass {
     private _totalRangeCount: number = 0;
     private _lastRandomWalk: number = 0;
 
-    constructor (private _xyDataSeries: XyDataSeries, private _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {}
+    constructor (_xyDataSeries: XyDataSeries, _optionsXyDataSeries: ChartOptionsXyDataSeriesType) {
+	super(_xyDataSeries, _optionsXyDataSeries);
+    }
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoCapacity;
