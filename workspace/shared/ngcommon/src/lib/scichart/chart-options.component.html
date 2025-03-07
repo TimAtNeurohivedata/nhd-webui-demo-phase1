@@ -19,7 +19,16 @@
   </mat-form-field>
 
   <mat-form-field>
-    <mat-label>Auto Update Timescale</mat-label>
+    <mat-label>Auto Update Timescale Length</mat-label>
+    <mat-select [ngModel]='"" + this.optionsService.chartOptions.dataGenerator.fifoTimescale' (ngModelChange)='this.ngModelChange({ dataGenerator: { fifoTimescale: $event } })'>
+      <mat-option value=1>1.0x</mat-option>
+      <mat-option value=2>2.0x</mat-option>
+      <mat-option value=4>4.0x</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field>
+    <mat-label>Auto Update Timescale Speed</mat-label>
     <mat-select [ngModel]='"" + this.optionsService.chartOptions.dataGenerator.autoUpdateTimescale' (ngModelChange)='this.ngModelChange({ dataGenerator: { autoUpdateTimescale: $event } })'>
       <mat-option value=0.1>0.1x</mat-option>
       <mat-option value=1>1.0x</mat-option>

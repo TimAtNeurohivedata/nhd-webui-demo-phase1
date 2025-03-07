@@ -181,7 +181,7 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	// This is the value that is used for visibleRange until the user modifieds the default overview data panel
 	else {
 	    let xyDataSeries = this[0];
-	    let fifoTimescaleTailStartIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() / this._optionsDataGenerator.fifoTimescale);
+	    let fifoTimescaleTailStartIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() * (this._optionsDataGenerator.fifoTimescale - 1) / this._optionsDataGenerator.fifoTimescale);
 	    let fifoTimescaleTailEndIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() - 1);
 	    this._visibleRange = new NumberRange(fifoTimescaleTailStartIndex, fifoTimescaleTailEndIndex);
 	}
