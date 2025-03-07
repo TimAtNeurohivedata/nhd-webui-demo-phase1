@@ -117,7 +117,7 @@ export class StackedLineChartComponent {
 	// Create the second axis which has the beginning date/time on left side and ending date/time on right side
 	// These are for the data that is currently being shown on the chart
 	const xAxis2 = new DateTimeNumericAxis(this._scichartWasmContext, {
-	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Always : EAutoRange.Once,
+	    autoRange: this._optionsService.streamDataEnabled ? EAutoRange.Never : EAutoRange.Never,
 	    axisTitleStyle: { color: "#EEEEEE" },
 	    backgroundColor: "#EEEEEE11",
 	    clipToXRange: true,

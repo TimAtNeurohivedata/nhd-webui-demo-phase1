@@ -200,7 +200,7 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
         // super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
 	const dynamicDataType = optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Dynamic;
 	const fifoTimescaleCapacity = optionsDataGenerator.dataType === "EegFixedData" ? eegFixedData01.length - 1 : optionsDataGenerator.fifoTotalLength;
-	const fifoTotalCapacity = fifoTimescaleCapacity * optionsDataGenerator.fifoTimescale;
+	const fifoTotalCapacity = !dynamicDataType ? fifoTimescaleCapacity * optionsDataGenerator.fifoTimescale : fifoTimescaleCapacity;
 	const streamData = optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
 	let optionsXyDataSeries: ChartOptionsXyDataSeriesType = {
 	    containsNaN: true,
@@ -392,7 +392,19 @@ class EegFixedDataXyDataSeriesInterface extends ChartXyDataSeriesInterfaceAbstra
 	this._scaleYAxis = this._optionsXyDataSeries.yAxisAmplitude / -75.0;
     }
 
-    override get annotations(): ChartXyDataSeriesAnnotationType[] { return [{x: 44.5, y: 15}]; }
+    override get annotations(): ChartXyDataSeriesAnnotationType[] {
+	let annotations: ChartXyDataSeriesAnnotationType[] = [{x: 44.5, y: 15}];
+	if (this._optionsXyDataSeries.fifoTotalCapacity > 4000) {
+	    annotations.push({x: 144.5, y: 15});
+	}
+	if (this._optionsXyDataSeries.fifoTotalCapacity > 6000) {
+	    annotations.push({x: 244.5, y: 15});
+	}
+	if (this._optionsXyDataSeries.fifoTotalCapacity > 8000) {
+	    annotations.push({x: 344.5, y: 15});
+	}
+	return annotations;
+    }
 
     autoUpdateDataRange(rangeCount: number): void {
 	let xAxisOffset = this._optionsXyDataSeries.streamData ? this._totalRangeCount : this._totalRangeCount % this._optionsXyDataSeries.fifoTotalCapacity;
