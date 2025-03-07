@@ -56,7 +56,8 @@
 
 .grid-row-2 {
   display: grid;
-  grid-template-columns: 11fr 89fr;
+  /* grid-template-columns: 11fr 89fr; */
+  grid-template-columns: 0fr 100fr;
 }
 
 .grid-column-2a {
@@ -71,7 +72,8 @@
 
 .grid-row-3 {
   display: grid;
-  grid-template-columns: 11fr 89fr;
+  /* grid-template-columns: 11fr 89fr; */
+  grid-template-columns: 0fr 100fr;
 }
 
 .grid-column-3a {
