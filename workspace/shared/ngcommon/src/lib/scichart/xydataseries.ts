@@ -80,13 +80,14 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	    // Update the data at least one time whether or not the dataGenerator autoUpdateType is Static/Dynamic/Streaming
 	    // Auto update data for the entire XyDataSeries FIFO for all data types so that the initial lines fill the entire graph
 	    for (let i = 0 ; i < this._optionsDataGenerator.fifoTimescale ; i++) {
-		this._updateDataNow(this[i].optionsXyDataSeries.fifoTimescaleCapacity);
+		this._initXyDataSeries(this[i].optionsXyDataSeries.fifoTimescaleCapacity);
 	    }
+	    this._initVisibleRange();
 
 	    // If it is static then auto update data for the entire XyDataSeries FIFO, otherwise draw all data on a auto update timer
 	    const staticData = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Static;
 	    if (!staticData) {
-		this._autoUpdateDataRangeTimer();
+		this._createAutoUpdateTimer();
 	    }
 	}
     }
@@ -115,10 +116,20 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	this._autoUpdateCallback = autoUpdateCallback;
     }
 
-    _autoUpdateDataRangeTimer(): void {
+    _createAutoUpdateTimer(): void {
 	let scaleUpdateRate = this._optionsDataGenerator.autoUpdateTimescale < 1.0 ? 1.0 / this._optionsDataGenerator.autoUpdateTimescale : 1.0;
 	let autoUpdateRange = (1000 / this._optionsDataGenerator.autoUpdateRateMsec) / this._optionsDataGenerator.xAxisDensity * this._optionsDataGenerator.autoUpdateTimescale * scaleUpdateRate;
-	this._intervalId = setInterval(() => { this._updateDataNow(autoUpdateRange); }, this._optionsDataGenerator.autoUpdateRateMsec * scaleUpdateRate);
+	let intervalMsec = this._optionsDataGenerator.autoUpdateRateMsec * scaleUpdateRate;
+	this._intervalId = setInterval(() => {
+	    let xyDataSeries = this[0];
+	    if (xyDataSeries === undefined || xyDataSeries.getNativeXValues() === undefined) {
+		clearInterval(this._intervalId);
+		this._intervalId = undefined;
+		return;
+	    }
+	    this._updateXyDataSeries(autoUpdateRange);
+	    this._updateVisibleRange();
+	}, intervalMsec);
     }
 
     _createDataGenerators(): void {
@@ -128,26 +139,38 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	}
     }
 
-    _updateDataNow(rangeCount: number): void {
-	let xyDataSeries = this[0];
-	if (xyDataSeries === undefined || xyDataSeries.getNativeXValues() === undefined) {
-	    clearInterval(this._intervalId);
-	    this._intervalId = undefined;
-	    return;
-	}
+    _initXyDataSeries(rangeCount: number): void {
 	for (let i = 0 ; i < this._arrayLength ; i++) {
 	    this[i].autoUpdateDataRange(rangeCount);	    
 	}
-	this._updateVisibleRange();
+    }
+
+    _initVisibleRange(): void {
+	// Initialize the visibleRange to match the first XyDataSeries xAxis values
+	// Update the visibleRange of the first xAxis to match the FifoTimescale to visualize a single timescale
+	let xyDataSeries = this[0];
+	let fifoTimescaleTailStartIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() / this._optionsDataGenerator.fifoTimescale);
+	let fifoTimescaleTailEndIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() - 1);
+	this._visibleRange = new NumberRange(fifoTimescaleTailStartIndex, fifoTimescaleTailEndIndex);
 	if (this._autoUpdateCallback !== undefined) {
 	    this._autoUpdateCallback(this._visibleRange);
 	}
     }
 
+    _updateXyDataSeries(rangeCount: number): void {
+	for (let i = 0 ; i < this._arrayLength ; i++) {
+	    this[i].autoUpdateDataRange(rangeCount);
+	}
+    }
+
     _updateVisibleRange(): void {
+	// Do not dynamically update the visbleRange data if the autoUpdateType is Dynamic
+	const dynamicDataType = this._optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Dynamic;
+        if (dynamicDataType) { return; }
+
 	// Check to see if the Visible Range was changed from the overview panel
 	// If the _visibleRangeOffsetIndex is set then use it to determine where the next visibleRange should be set, this happens when the overview panel is updated
-	if (this._visibleRangeOffsetIndex !== undefined) {
+	if (this._visibleRangeOffsetIndex !== undefined && !dynamicDataType) {
 	    let xyDataSeries = this[0];
 	    if (xyDataSeries.getNativeXValues() === undefined) { console.log("xyDataSeries.getNativeXValues: ", xyDataSeries.getNativeXValues); return; }
 	    let fifoTimescaleTailStartIndex = xyDataSeries.getNativeXValues().get(this._visibleRangeOffsetIndex.min);
@@ -155,11 +178,15 @@ export class ChartXyDataSeriesArray extends Array<ChartXyDataSeries> {
 	    this._visibleRange = new NumberRange(fifoTimescaleTailStartIndex, fifoTimescaleTailEndIndex);
 	}
 	// Update the visibleRange of the first xAxis to match the FifoTimescale to visualize a single timescale
+	// This is the value that is used for visibleRange until the user modifieds the default overview data panel
 	else {
 	    let xyDataSeries = this[0];
 	    let fifoTimescaleTailStartIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() / this._optionsDataGenerator.fifoTimescale);
 	    let fifoTimescaleTailEndIndex = xyDataSeries.getNativeXValues().get(xyDataSeries.count() - 1);
 	    this._visibleRange = new NumberRange(fifoTimescaleTailStartIndex, fifoTimescaleTailEndIndex);
+	}
+	if (this._autoUpdateCallback !== undefined) {
+	    this._autoUpdateCallback(this._visibleRange);
 	}
     }
 }
@@ -171,13 +198,14 @@ export class ChartXyDataSeries extends ChartXyDataSeriesAbstractClass implements
 
     static XyGeneratorOptions(optionsDataGenerator: ChartOptionsDataGeneratorType): ChartOptionsXyDataSeriesType {
         // super(_wasmContext, { containsNaN: true, dataIsSortedInX: true, dataEvenlySpacedInX: true, fifoCapacity: _fifoCapacity, fifoSweeping: true });
+	const dynamicDataType = optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Dynamic;
 	const fifoTimescaleCapacity = optionsDataGenerator.dataType === "EegFixedData" ? eegFixedData01.length - 1 : optionsDataGenerator.fifoTotalLength;
 	const fifoTotalCapacity = fifoTimescaleCapacity * optionsDataGenerator.fifoTimescale;
 	const streamData = optionsDataGenerator.autoUpdateType === ChartOptionsAutoUpdateTypeEnum.Stream;
 	let optionsXyDataSeries: ChartOptionsXyDataSeriesType = {
 	    containsNaN: true,
 	    dataEvenlySpaced: true,
-	    dataIsSortedInX: true,
+	    dataIsSortedInX: !dynamicDataType,
 	    fifoTimescaleCapacity: fifoTimescaleCapacity,
 	    fifoTotalCapacity: fifoTotalCapacity,
 	    fifoSweeping: true,
