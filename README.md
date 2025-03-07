@@ -19,5 +19,19 @@ Tar the build for AWS and upload it
 ===================================
 Note: don't use node_module, it's way too large and much easier to install those on AWS
 
-# tar -cvf upload.tar dist package.json angular.json
-# scp upload.tar ubuntu@3.144.28.182:4200/tmp
+# (cd ../.. ; tar -cvf /tmp/upload.tar nhd-webui-demo-phase1/basic-html-screen/ nhd-webui-demo-phase1/server/ nhd-webui-demo-phase1/workspace/dist/ nhd-webui-demo-phase1/workspace/package.json nhd-webui-demo-phase1/workspace/angular.json)
+# scp -i ~/.ssh/neurohivedata-demo1.pem /tmp/upload.tar ubuntu@ec2-3-149-25-9.us-east-2.compute.amazonaws.com:/tmp/upload.tar
+
+Connect to the AWS EC2 instance, unzip the tar file, and restart the web server
+===============================================================================
+
+ubuntu@ubuntu-Virtual-Machine:~$ ssh -i ~/.ssh/neurohivedata-demo1.pem ubuntu@ec2-3-149-25-9.us-east-2.compute.amazonaws.com
+Now logged into AWS EC2 instance
+ubuntu@ip-172-31-5-45:~$ cd neurohivedata/
+ubuntu@ip-172-31-5-45:~/neurohivedata$ mv nhd-webui-demo-phase1 save//nhd-webui-demo-phase1-before-3-7-2025
+ubuntu@ip-172-31-5-45:~/neurohivedata$ tar -xvf /tmp/upload.tar
+ubuntu@ip-172-31-5-45:~/neurohivedata$ cd nhd-webui-demo-phase1/workspace/
+ubuntu@ip-172-31-5-45:~/neurohivedata/nhd-webui-demo-phase1/workspace$ npm install
+ubuntu@ip-172-31-5-45:~/neurohivedata/nhd-webui-demo-phase1/workspace$ ../server/lighttpd-stop.bash ; ../server/lighttpd-start.bash
+
+

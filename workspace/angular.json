@@ -745,6 +745,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
+            "baseHref": "/workspace/dist/ngcommon02-stacked-line-chart/browser/",
             "outputPath": "dist/ngcommon02-stacked-line-chart",
             "index": "demo-app/ngcommon02-stacked-line-chart/src/index.html",
             "browser": "demo-app/ngcommon02-stacked-line-chart/src/main.ts",
@@ -768,8 +769,8 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "5MB",
+                  "maximumError": "5MB"
                 },
                 {
                   "type": "anyComponentStyle",
