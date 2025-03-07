@@ -11,7 +11,7 @@ import { NgcommonModule, ChartOptionsContainerComponent, ChartOptionsService, Ch
 
 export class AppScreenComponent {
     constructor(private _optionsService: ChartOptionsService, private _themeService: ChartThemeService) {
-	this._optionsService.chartOptions.dataGenerator.dataType = "SineWave";
-	this._optionsService.chartOptions.dataGenerator.autoUpdateType = "Static";
+	this._optionsService.chartOptions.dataGenerator.dataType = "EegFixedData";
+	this._optionsService.chartOptions.dataGenerator.autoUpdateType = "Stream";
     }
 }
